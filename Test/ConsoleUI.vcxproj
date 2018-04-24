@@ -148,6 +148,8 @@
   <ItemGroup>
     <ClCompile Include="..\conv\Convertor.cpp" />
     <ClCompile Include="..\conv\win_iconv.c" />
+    <ClCompile Include="..\Src\QuickEditCheck.cpp" />
+    <ClCompile Include="..\Src\RegOperator.cpp" />
     <ClCompile Include="..\Src\string_utility.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
@@ -157,6 +159,8 @@
     <ClInclude Include="..\Src\ConsoleUI.h" />
     <ClInclude Include="..\Src\ConsoleComCtrl.h" />
     <ClInclude Include="..\Src\ConsoleComEvent.h" />
+    <ClInclude Include="..\Src\QuickEditCheck.h" />
+    <ClInclude Include="..\Src\RegOperator.h" />
     <ClInclude Include="..\Src\RTreeEx.h" />
     <ClInclude Include="..\Src\string_utility.h" />
     <ClInclude Include="..\Src\Timer.h" />

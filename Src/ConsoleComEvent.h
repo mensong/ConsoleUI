@@ -30,11 +30,26 @@ protected:
 			if (FROM_LEFT_1ST_BUTTON_PRESSED == input_record.Event.MouseEvent.dwButtonState
 				|| RIGHTMOST_BUTTON_PRESSED == input_record.Event.MouseEvent.dwButtonState)
 			{
-				//the pointer follow mouse click
+				//Control* pCtrlOld = consoleUI()->getActiveControl();
+
+				//Set current mouse pointer
+				//  make sure getActiveControl right
 				consoleUI()->setCurPosition(
 					input_record.Event.MouseEvent.dwMousePosition.X,
 					input_record.Event.MouseEvent.dwMousePosition.Y
 				);
+
+				//Control* pCtrl = consoleUI()->getActiveControl();
+				//ControlSelectable* pSelectableOld = dynamic_cast<ControlSelectable*>(pCtrlOld);
+				//ControlSelectable* pSelectable = dynamic_cast<ControlSelectable*>(pCtrl);
+				//if (pCtrlOld && pCtrlOld != pCtrl && pSelectableOld != NULL && pSelectableOld->isSelectable())
+				//{
+				//	consoleUI()->redrawControl(pCtrlOld);
+				//}
+				//if (pCtrl && pSelectable != NULL && pSelectable->isSelectable())
+				//{
+				//	consoleUI()->redrawControl(pCtrl);
+				//}
 			}
 		}
 		else if (KEY_EVENT == input_record.EventType)
@@ -44,7 +59,7 @@ protected:
 				return;
 			}
 
-			if (consoleUI()->getActiveControl() != NULL)
+			if (!isGlobalEvent() && consoleUI()->getActiveControl() != NULL)
 				return;
 
 			COORD curPt = consoleUI()->getCurPosition();

@@ -7,7 +7,9 @@
 
 class Timer {
 public:
-	Timer() : try_to_expire_(false) 
+	Timer()
+		: try_to_expire_(false)
+		, pause(false)
 	{
 	}
 
@@ -23,7 +25,7 @@ public:
 			while (!try_to_expire_) 
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-				if (!try_to_expire_)
+				if (!try_to_expire_ && !pause)
 					task();
 			}
 		}).detach();
@@ -34,7 +36,18 @@ public:
 		try_to_expire_ = true;
 	}
 
+	void Pause()
+	{
+		pause = true;
+	}
+
+	void Resume()
+	{
+		pause = false;
+	}
+
 private:
 	std::atomic<bool> try_to_expire_;
+	std::atomic<bool> pause;
 };
 #endif

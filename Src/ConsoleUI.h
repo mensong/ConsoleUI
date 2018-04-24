@@ -127,6 +127,7 @@ public:
 	typedef DWORD INPUT_MODE;
 
 	Event()
+		: m_bGlobalEvent(false)
 	{
 
 	}
@@ -212,6 +213,18 @@ public:
 
 		return vctRet;
 	}
+
+	void setGlobalEvent(bool b)
+	{
+		m_bGlobalEvent = b;
+	}
+	bool isGlobalEvent() const
+	{
+		return m_bGlobalEvent;
+	}
+
+private:
+	bool m_bGlobalEvent;//是否是全局事件，如果是全局事件，则无论焦点是不是在该控件上等情况都会触发，非必要不要用
 };
 
 
@@ -223,12 +236,20 @@ typedef struct tagRect
 	int nWidth;
 	int nHeight;
 
-	tagRect()
+	tagRect(int x=0, int y=0, int width=0, int height=0)
 	{
-		X = 0;
-		Y = 0;
-		nWidth = 0;
-		nHeight = 0;
+		X = x;
+		Y = y;
+		nWidth = width;
+		nHeight = height;
+	}
+
+	tagRect(const tagRect& rect)
+	{
+		X = rect.X;
+		Y = rect.Y;
+		nWidth = rect.nWidth;
+		nHeight = rect.nHeight;
 	}
 
 	bool isIn(int nX, int nY) const
@@ -250,11 +271,11 @@ public:
 
 	}
 
-	COLOR getBKColor() const { return m_bkColor; }
+	COLOR getBkColor() const { return m_bkColor; }
 	COLOR getTextColor() const { return m_textColor; }
 	STYLE getStyle() const { return m_Style; }
 
-	void setBKColor(COLOR bkColor) { m_bkColor = bkColor; }
+	void setBkColor(COLOR bkColor) { m_bkColor = bkColor; }
 	void setTextColor(COLOR textColor) { m_textColor = textColor; }
 	void setStyle(STYLE style) { m_Style = style; }
 
@@ -263,7 +284,6 @@ protected:
 	COLOR m_textColor;
 	STYLE m_Style;
 };
-
 
 //control base
 class Control
@@ -298,15 +318,14 @@ public:
 		return m_rect;
 	}
 
-	virtual void setRect(const Rect &rect)
+	inline const Rect& rect() const
 	{
-		m_rect = rect;
+		return m_rect;
 	}
-
 
 	virtual void getPointColorAndStyle(int x, int y, COLOR& bkClolor, COLOR& textColor, STYLE& style) const
 	{
-		bkClolor = this->getBKColor();
+		bkClolor = this->getBkColor();
 		textColor = this->getTextColor();
 		style = this->getStyle();
 	}
@@ -332,9 +351,23 @@ public:
 	}
 
 protected:
-	Rect m_rect;
 	bool m_bVisible;
 	bool m_bEnable;
+
+private:
+	friend class ConsoleUI;
+	void setRect(const Rect& rect)
+	{
+		m_rect = rect;
+	}
+	void setRect(int x, int y, int nWidth, int nHeight)
+	{
+		m_rect.X = x;
+		m_rect.Y = y;
+		m_rect.nWidth = nWidth;
+		m_rect.nHeight = nHeight;
+	}
+	Rect m_rect;
 };
 
 
@@ -369,6 +402,11 @@ public:
 
 	HANDLE getOutConsole() const { return m_hOut; }
 	HANDLE getInConsole() const { return m_hIn; }
+
+	void setTitle(const char* title)
+	{
+		SetConsoleTitleA(title);
+	}
 
 	//获得屏模信息
 	CONSOLE_SCREEN_BUFFER_INFO getConsoleScreenInfo() const
@@ -617,7 +655,7 @@ public:
 		wprintf(txt);
 	}
 
-	void setBKColor(COLOR bkColor, bool redraw) 
+	void setBkColor(COLOR bkColor, bool redraw) 
 	{
 		m_bkColor = bkColor;
 		if (redraw)
@@ -1023,10 +1061,7 @@ public:
 		if (!pControl->onPreInitControl())
 			return FALSE;
 
-		Rect rect = pControl->getRect();
-		float aMin[2] = { rect.X, rect.Y };
-		float aMax[2] = { rect.X + rect.nWidth-1, rect.Y + rect.nHeight-1 };
-		m_rtRect2Control.Insert(aMin, aMax, pControl);
+		updateControlRect(pControl);
 
 		m_vctControls.push_back(pControl);
 
@@ -1037,6 +1072,33 @@ public:
 			pControl->draw();
 
 		return TRUE;
+	}
+
+	const std::vector<Control*>& getControls() const
+	{
+		return m_vctControls;
+	}
+
+	bool addControlRect(Control* pControl)
+	{
+		Rect rect = pControl->getRect();
+		float aMin[2] = { rect.X, rect.Y };
+		float aMax[2] = { rect.X + rect.nWidth - 1, rect.Y + rect.nHeight - 1 };
+		return m_rtRect2Control.Insert(aMin, aMax, pControl);
+	}
+
+	bool removeControlRect(Control* pControl)
+	{
+		Rect rect = pControl->getRect();
+		float aMin[2] = { rect.X, rect.Y };
+		float aMax[2] = { rect.X + rect.nWidth, rect.Y + rect.nHeight };
+		return m_rtRect2Control.Remove(aMin, aMax, pControl);
+	}
+
+	bool updateControlRect(Control* pControl)
+	{
+		removeControlRect(pControl);
+		return addControlRect(pControl);
 	}
 
 	Console* getConsoleById(const std::string& id)
@@ -1107,6 +1169,21 @@ public:
 		return getTopControl(pt.X, pt.Y);
 	}
 
+	int getControlLayerId(Control* pCtrl)
+	{
+		int nLayer = std::find(m_vctControls.begin(), m_vctControls.end(), pCtrl) - m_vctControls.begin();
+		if (nLayer < m_vctControls.size())
+			return nLayer;
+		return -1;
+	}
+
+	Control* getControlByLayerId(int nLayerId)
+	{
+		if (0 > nLayerId || nLayerId >= m_vctControls.size())
+			return NULL;
+		return m_vctControls[nLayerId];
+	}
+
 	bool isControlActive(Control* pCtrl) const
 	{
 		return getActiveControl() == pCtrl;
@@ -1117,36 +1194,52 @@ public:
 		return getTopControl(x, y);
 	}
 
-	BOOL moveControl(Control* pControl, const Rect& rectTo)
+	//如果rectTo中的属性为-1时不改变原值
+	BOOL setControlRect(Control* pControl, const Rect& rectTo, bool redraw /*= false*/)
 	{
-		//先移除旧区域，再绘制新区域
-		//  移除旧区域时，获得旧区域下的颜色，再根据这颜色去刷新
-		Rect rectFrom = pControl->getRect();
-		for (int x = rectFrom.X; x < rectFrom.X + rectFrom.nWidth; ++x)
+		Rect _rectFrom = pControl->getRect();
+		Rect _rectTo(
+			rectTo.X == -1 ? _rectFrom.X : rectTo.X, rectTo.Y == -1 ? _rectFrom.Y : rectTo.Y,
+			rectTo.nWidth == -1 ? _rectFrom.nWidth : rectTo.nWidth, rectTo.nHeight == -1 ? _rectFrom.nHeight : rectTo.nHeight);
+
+		if (redraw)
 		{
-			for (int y = rectFrom.Y; y < rectFrom.Y + rectFrom.nHeight; ++y)
+			//先移除旧区域，再绘制新区域
+			//  移除旧区域时，获得旧区域下的颜色，再根据这颜色去刷新
+			for (int x = _rectFrom.X; x < _rectFrom.X + _rectFrom.nWidth; ++x)
 			{
-				if (!rectTo.isIn(x, y))
+				for (int y = _rectFrom.Y; y < _rectFrom.Y + _rectFrom.nHeight; ++y)
 				{
-					Control* pTopControl = getTopControl(x, y, pControl);
-					if (pTopControl)
+					if (!_rectTo.isIn(x, y))
 					{
-						COLOR bkClolor; COLOR textColor; STYLE style;
-						pTopControl->getPointColorAndStyle(x, y, bkClolor, textColor, style);
-						drawPoint(x, y, " ", textColor, bkClolor, style);
-					}
-					else
-					{
-						drawPoint(x, y, " ", getTextColor(), getBKColor(), getStyle());
+						Control* pTopControl = getTopControl(x, y, pControl);
+						if (pTopControl)
+						{
+							COLOR bkClolor; COLOR textColor; STYLE style;
+							pTopControl->getPointColorAndStyle(x, y, bkClolor, textColor, style);
+							drawPoint(x, y, " ", textColor, bkClolor, style);
+						}
+						else
+						{
+							drawPoint(x, y, " ", getTextColor(), getBkColor(), getStyle());
+						}
 					}
 				}
 			}
 		}
+		
+		pControl->setRect(_rectTo);
+		bool bRet = updateControlRect(pControl);
 
-		pControl->setRect(rectTo);
-		refreshControl(pControl);
+		if (redraw)
+			redrawControl(pControl, redraw, redraw);
 
-		return TRUE;
+		return bRet;
+	}
+
+	BOOL setControlRect(Control* pControl, int tox=-1, int toy=-1, int toWidth=-1, int toHeight=-1, bool redraw = false)
+	{
+		return setControlRect(pControl, Rect(tox, toy, toWidth, toHeight), redraw);
 	}
 
 	void sweepControlColorAndStyle(Control* pControl)
@@ -1192,7 +1285,7 @@ public:
 					if (atextColor == color_default)
 						atextColor = getTextColor();
 					if (abkColor == color_default)
-						abkColor = getBKColor();
+						abkColor = getBkColor();
 					if (astyle == style_default)
 						astyle = getStyle();
 				}
@@ -1215,21 +1308,6 @@ public:
 			redrawTopControls(pControl);
 
 		return TRUE;
-	}
-
-	//刷新控件，会更新位置信息
-	BOOL refreshControl(Control* pControl, bool redrawTop = true, bool redrawBottom = true)
-	{
-		if (redrawBottom)
-			redrawBottomControls(pControl);
-
-		removeControl(pControl);
-		BOOL bRet = addControl(pControl, true, false);
-
-		if (redrawTop)
-			redrawTopControls(pControl);
-
-		return bRet;
 	}
 
 	//刷新控件上面的控件
@@ -1385,33 +1463,40 @@ public:
 					continue;
 
 				bool bExe = false;
-				Control* pCtrl = dynamic_cast<Control*>(pEvent);
 
-				if (NULL == pCtrl)
-				{//App上的直系事件在任何时候都能触发
+				if (pEvent->isGlobalEvent())
+				{//如果是全局事件，则无论如何都执行
 					bExe = true;
 				}
 				else
 				{
-					if (input_record.Event.MouseEvent.dwButtonState != 0)
-						int n = 0;
-
-					//检测控件enable
-					if (!pCtrl->isEnable())
-						continue;
-
-					//控件鼠标事件只有在鼠标在控件上面时才触发
-					if (MOUSE_EVENT == input_record.EventType
-						&& (getControlAtPoint(
-							input_record.Event.MouseEvent.dwMousePosition.X,
-							input_record.Event.MouseEvent.dwMousePosition.Y) == pCtrl)
-						)
-					{
+					Control* pCtrl = dynamic_cast<Control*>(pEvent);
+					if (NULL == pCtrl)
+					{//App上的直系事件在任何时候都能触发
 						bExe = true;
 					}
-					else if (KEY_EVENT == input_record.EventType && isControlActive(pCtrl))
-					{//控件键盘事件只有在获得焦点时才触发
-						bExe = true;
+					else
+					{
+						if (input_record.Event.MouseEvent.dwButtonState != 0)
+							int n = 0;
+
+						//检测控件enable
+						if (!pCtrl->isEnable())
+							continue;
+
+						//控件鼠标事件只有在鼠标在控件上面时才触发
+						if (MOUSE_EVENT == input_record.EventType
+							&& (getControlAtPoint(
+								input_record.Event.MouseEvent.dwMousePosition.X,
+								input_record.Event.MouseEvent.dwMousePosition.Y) == pCtrl)
+							)
+						{
+							bExe = true;
+						}
+						else if (KEY_EVENT == input_record.EventType && isControlActive(pCtrl))
+						{//控件键盘事件只有在获得焦点时才触发
+							bExe = true;
+						}
 					}
 				}
 				if (bExe)
@@ -1442,6 +1527,37 @@ public:
 		m_loop = false;
 	}
 
+	void pushPosition(int x=-1, int y=-1)
+	{
+		COORD pt;
+		if (x == -1 || y == -1)
+		{
+			pt = getCurPosition();
+		}
+		else
+		{
+			pt.X = x;
+			pt.Y = y;
+		}
+
+		m_stackPostion.push_back(pt);
+	}
+
+	COORD popPosition()
+	{
+		COORD pt; pt.X = -1; pt.Y = -1;
+
+		if (m_stackPostion.size() < 1)
+			return pt;
+
+		pt = m_stackPostion[m_stackPostion.size() - 1];
+		m_stackPostion.pop_back();
+
+		setCurPosition(pt.X, pt.Y);
+
+		return pt;
+	}
+
 private:
 	HANDLE		m_hOut;     /* Handle to the "screen" */
 	HANDLE		m_hIn;      /* Handle to the "keyboard" */
@@ -1452,6 +1568,104 @@ private:
 
 	std::vector<Control*> m_vctControls;
 	RT::RTreeEx<Control*, float, 2> m_rtRect2Control;
+
+	std::vector<COORD> m_stackPostion;
+};
+
+//Selectable Console
+class ControlSelectable
+	: public Control
+{
+public:
+	ControlSelectable()
+		: m_bCanSelectable(false)
+	{
+
+	}
+	virtual ~ControlSelectable()
+	{
+
+	}
+
+	void setSelectedTextColor(COLOR color)
+	{
+		m_colorSelected.setTextColor(color);
+	}
+
+	void setSelectedBkColor(COLOR color)
+	{
+		m_colorSelected.setBkColor(color);
+	}
+
+	void setSelectedStyle(STYLE style)
+	{
+		m_colorSelected.setStyle(style);
+	}
+
+	COLOR getSelectedTextColor()
+	{
+		return m_colorSelected.getTextColor();
+	}
+
+	COLOR getSelectedBkColor()
+	{
+		return m_colorSelected.getBkColor();
+	}
+
+	STYLE getSelectedStyle()
+	{
+		return m_colorSelected.getStyle();
+	}
+
+	virtual COLOR getDrawTextColor()
+	{
+		if (consoleUI()->isControlActive(this))
+			return m_colorSelected.getTextColor();
+		return getTextColor();
+	}
+
+	virtual COLOR getDrawBkColor()
+	{
+		if (consoleUI()->isControlActive(this))
+			return m_colorSelected.getBkColor();
+		return getBkColor();
+	}
+
+	virtual STYLE getDrawStyle()
+	{
+		if (consoleUI()->isControlActive(this))
+			return m_colorSelected.getStyle();
+		return getStyle();
+	}
+
+	virtual void getDrawColorAndStyle(COLOR& textColor, COLOR& bkColor, STYLE& style)
+	{
+		if (m_bCanSelectable && consoleUI()->isControlActive(this))
+		{
+			textColor = m_colorSelected.getTextColor();
+			bkColor = m_colorSelected.getBkColor();
+			style = m_colorSelected.getStyle();
+		}
+		else
+		{
+			textColor = getTextColor();
+			bkColor = getBkColor();
+			style = getStyle();
+		}
+	}
+
+	void setSelectable(bool b)
+	{
+		m_bCanSelectable = b;
+	}
+	bool isSelectable()
+	{
+		return m_bCanSelectable;
+	}
+
+protected:
+	ConsoleColor m_colorSelected;
+	bool m_bCanSelectable;
 };
 
 ｝NS_END

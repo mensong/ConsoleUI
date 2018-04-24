@@ -1,5 +1,6 @@
 #include "ConsoleComEvent.h"
 #include "ConsoleComCtrl.h"
+#include "QuickEditCheck.h"
 
 using namespace GL;
 
@@ -34,14 +35,19 @@ protected:
 	}
 };
 
-void main()
+void main(int argc, char** argv)
 {
-	ConsoleUI consoleUI/*(GL::COLOR::dark_cyan)*/;
+	QuickEditCheck qec;	
 
-	EventMouseFollow mev(&consoleUI);
-	consoleUI.addEvent(&mev);
+	ConsoleUI consoleUI/*(GL::COLOR::dark_cyan)*/;
+	consoleUI.setTitle("Console UI 演示");
+
+	//EventMouseFollow mev(&consoleUI);
+	//consoleUI.addEvent(&mev);
 	EventResizeWindow rw(&consoleUI);
 	consoleUI.addEvent(&rw);
+	EventTabSelect ts(&consoleUI);
+	consoleUI.addEvent(&ts);
 
 	ConsolePlane titlePlane(&consoleUI);
 	Rect rectTitle;
@@ -49,8 +55,8 @@ void main()
 	rectTitle.Y = 0;
 	rectTitle.nWidth = consoleUI.getConsoleScreenInfo().dwSize.X;
 	rectTitle.nHeight = 2;
-	titlePlane.setRect(rectTitle);
-	titlePlane.setBKColor(dark_white);
+	consoleUI.setControlRect(&titlePlane, rectTitle, false);
+	titlePlane.setBkColor(dark_white);
 	consoleUI.addControl(&titlePlane);
 	consoleUI.addEvent(&titlePlane);
 
@@ -68,7 +74,7 @@ void main()
 	rectList.Y = 3;
 	rectList.nWidth = 60;
 	rectList.nHeight = 20;
-	listBox.setRect(rectList);
+	consoleUI.setControlRect(&listBox, rectList, false);
 	listBox.setID("MY_LIST_BOX");
 	consoleUI.addControl(&listBox);
 	consoleUI.addEvent(&listBox);
@@ -91,17 +97,19 @@ void main()
 	inputBox.setPosition(73, 4);
 	inputBox.setWidth(15);
 	inputBox.setID("MY_INPUT_BOX");
+	inputBox.setSelectable(true);
 	consoleUI.addEvent(&inputBox);
 	consoleUI.addControl(&inputBox);
 
 	MyButton btSetText(&consoleUI);
 	btSetText.setCaption("设置文本");
+	btSetText.setSelectable(true);
 	Rect rect;
 	rect.nWidth = 8;
 	rect.nHeight = 1;
 	rect.X = 90;
 	rect.Y = 4;
-	btSetText.setRect(rect);
+	consoleUI.setControlRect(&btSetText, rect, false);
 	consoleUI.addEvent(&btSetText);
 	consoleUI.addControl(&btSetText);
 
@@ -119,15 +127,61 @@ void main()
 	};
 	ConsoleButton btGetText(&consoleUI);
 	btGetText.setCaption("获得文本");
+	btGetText.setSelectable(true);
 	Rect rectGetText;
 	rectGetText.nWidth = 8;
 	rectGetText.nHeight = 1;
 	rectGetText.X = 90;
 	rectGetText.Y = 6;
-	btGetText.setRect(rectGetText);
+	consoleUI.setControlRect(&btGetText, rectGetText, false);
 	btGetText.setClickedEvent(onGetTextClick);
 	consoleUI.addEvent(&btGetText);
 	consoleUI.addControl(&btGetText);
 
+	ConsoleCheckBox cb(&consoleUI);
+	cb.setCheck(false);
+	cb.setPosition(65, 8);
+	cb.setAutoWidth(true);
+	cb.setContent("请选择我吧");
+	cb.setSelectable(true);
+	consoleUI.addControl(&cb);
+	consoleUI.addEvent(&cb);
+
+	ConsoleRadioBox::Group rbg;
+	ConsoleRadioBox rb1(&consoleUI);
+	rb1.setPosition(65, 10);
+	rb1.setAutoWidth(true);
+	rb1.setContent("请选择我吧1");
+	rb1.setSelectable(true);
+	consoleUI.addControl(&rb1);
+	consoleUI.addEvent(&rb1);
+	rbg.addRadioBox(&rb1);
+	ConsoleRadioBox rb2(&consoleUI);
+	rb2.setPosition(80, 10);
+	rb2.setAutoWidth(true);
+	rb2.setContent("请选择我吧2");
+	rb2.setSelectable(true);
+	consoleUI.addControl(&rb2);
+	consoleUI.addEvent(&rb2);
+	rb2.setGroup(&rbg);
+	rbg.addRadioBox(&rb2);
+	ConsoleRadioBox rb3(&consoleUI);
+	rb3.setPosition(65, 11);
+	rb3.setAutoWidth(true);
+	rb3.setContent("请选择我吧3");
+	rb3.setSelectable(true);
+	consoleUI.addControl(&rb3);
+	consoleUI.addEvent(&rb3);
+	rbg.addRadioBox(&rb3);
+	ConsoleRadioBox rb4(&consoleUI);
+	rb4.setPosition(80, 11);
+	rb4.setAutoWidth(true);
+	rb4.setContent("请选择我吧4");
+	rb4.setSelectable(true);
+	consoleUI.addControl(&rb4);
+	consoleUI.addEvent(&rb4);
+	rb4.setGroup(&rbg);
+	rbg.addRadioBox(&rb4);
+	
 	consoleUI.loopEvent();
 }

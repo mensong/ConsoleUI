@@ -18,6 +18,11 @@
 #include <ctype.h>
 #include <Convertor.h>
 #include "string_utility.h"
+#include "ConsoleComEvent.h"
+
+#define BEGIN_DRAW consoleUI()->pushPosition();do{
+#define END_DRAW }while(0);consoleUI()->popPosition()
+#define BREAK_DRAW break
 
 NS_START｛
 
@@ -43,7 +48,7 @@ static std::string CutTooLongString(const std::string& s, int maxWidth)
 //Console Plane
 class ConsolePlane
 	: public EventMouseFollow
-	, public Control
+	, public ControlSelectable
 {
 public:
 	ConsolePlane(ConsoleUI *consoleUI = NULL)
@@ -65,15 +70,26 @@ public:
 
 	virtual bool draw()
 	{
-		if (!Control::draw())
-			return false;
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
 
-		consoleUI()->createBox(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight, getTextColor(), getBKColor(), getStyle());
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight, textColor, bkColor, style);
 
-		if (m_bHasBorder)
-			consoleUI()->createBorder(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight);
+			if (m_bHasBorder)
+				consoleUI()->createBorder(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight);
 
-		return true;
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
 	}
 
 	void setHasBorder(bool b)
@@ -96,7 +112,7 @@ typedef std::function<void(void)> FN_ON_CLICKED;
 typedef std::function<void(void)> FN_ON_RESIZE;
 class ConsoleButton
 	: public Event
-	, public Control
+	, public ControlSelectable
 {
 public:
 	ConsoleButton(ConsoleUI *consoleUI = NULL)
@@ -136,35 +152,48 @@ public:
 
 	virtual bool draw()
 	{
-		if (!Control::draw())
-			return false;
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
 
-		draw(m_textColor, m_bkColor, m_Style);
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+			draw(textColor, bkColor, style);
 
-		return true;
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
 	}
 
 	void draw(COLOR textColor, COLOR bkColor, STYLE style)
 	{
 		//draw box
-		consoleUI()->createBox(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight, textColor, bkColor, style);
+		consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight, textColor, bkColor, style);
 
-		std::string sDrawText = CutTooLongString(m_sCaption, m_rect.nWidth);
+		std::string sDrawText = CutTooLongString(m_sCaption, rect().nWidth);
 
 		int leftOffset = 0;
-		leftOffset = (m_rect.nWidth - sDrawText.length()) / 2;
+		leftOffset = (rect().nWidth - sDrawText.length()) / 2;
+		int topOffset = 0;
+		topOffset = rect().nHeight / 2;
 
 		//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
-		char *pSpace = new char[m_rect.nWidth + 1];
-		memset(pSpace, ' ', m_rect.nWidth);
-		pSpace[m_rect.nWidth] = '\0';
-		consoleUI()->drawText(m_rect.X, m_rect.Y, pSpace);
+		char *pSpace = new char[rect().nWidth + 1];
+		memset(pSpace, ' ', rect().nWidth);
+		pSpace[rect().nWidth] = '\0';
+		consoleUI()->drawText(rect().X, rect().Y, pSpace);
 		delete[] pSpace;
 
 		//绘制内容
-		consoleUI()->drawText(m_rect.X + leftOffset, m_rect.Y, sDrawText.c_str());
+		consoleUI()->drawText(rect().X + leftOffset, rect().Y + topOffset, sDrawText.c_str());
 
-		consoleUI()->createBorder(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight);
+		consoleUI()->createBorder(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight);
 	}
 
 protected:
@@ -241,7 +270,7 @@ private:
 //Console Label
 class ConsoleLabel
 	: public Event
-	, public Control
+	, public ControlSelectable
 {
 public:
 	enum ALIGN
@@ -255,10 +284,12 @@ public:
 	ConsoleLabel(ConsoleUI *consoleUI = NULL)
 		: m_bTransparent(true)
 		, m_align(left)
+		, m_bAutoWidth(false)
 	{
 		setConsoleUI(consoleUI);
 
 		m_bkColor = white;
+
 	}
 
 	virtual ~ConsoleLabel()
@@ -274,44 +305,58 @@ public:
 
 	virtual bool draw()
 	{
-		if (!Control::draw())
-			return false;
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
 
-		COLOR textColor = m_textColor;
-		if (textColor == color_default)
-		{
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+
+			if (m_bAutoWidth && rect().nWidth != m_content.length())
+				consoleUI()->setControlRect(this, -1, -1, m_content.length(), -1, false);
+
+			if (textColor == color_default)
+			{
+				if (m_bTransparent)
+					textColor = white;
+				else
+					textColor = black;
+			}
+
+			std::string sDrawText = CutTooLongString(m_content, rect().nWidth);
+
+			int leftOffset = 0;
+			if (m_align == left)
+				leftOffset = 0;
+			else if (m_align == center)
+				leftOffset = (rect().nWidth - sDrawText.length()) / 2;
+			else if (m_align == right)
+				leftOffset = rect().nWidth - sDrawText.length();
+
+			//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
+			char *pSpace = new char[rect().nWidth + 1];
+			memset(pSpace, ' ', rect().nWidth);
+			pSpace[rect().nWidth] = '\0';
+			consoleUI()->drawText(rect().X, rect().Y, pSpace);
+			delete[] pSpace;
+
+			//绘制内容
+			consoleUI()->drawText(rect().X + leftOffset, rect().Y, sDrawText.c_str());
+
 			if (m_bTransparent)
-				textColor = white;
+				consoleUI()->sweepRectColorAndStyle(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight, this, textColor);
 			else
-				textColor = black;
-		}
-		
-		std::string sDrawText = CutTooLongString(m_content, m_rect.nWidth);
+				consoleUI()->fillColorAndStyle(rect().X, rect().Y, rect().nWidth, textColor, bkColor, style);
 
-		int leftOffset = 0;
-		if (m_align == left)
-			leftOffset = 0;
-		else if (m_align == center)
-			leftOffset = (m_rect.nWidth - sDrawText.length()) / 2;
-		else if (m_align == right)
-			leftOffset = m_rect.nWidth - sDrawText.length();
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
 
-		//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
-		char *pSpace = new char[m_rect.nWidth + 1];
-		memset(pSpace, ' ', m_rect.nWidth);
-		pSpace[m_rect.nWidth] = '\0';
-		consoleUI()->drawText(m_rect.X, m_rect.Y, pSpace);
-		delete[] pSpace;
-
-		//绘制内容
-		consoleUI()->drawText(m_rect.X + leftOffset, m_rect.Y, sDrawText.c_str());
-
-		if (m_bTransparent)
-			consoleUI()->sweepRectColorAndStyle(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight, this, textColor);
-		else
-			consoleUI()->fillColorAndStyle(m_rect.X, m_rect.Y, m_rect.nWidth, textColor, getBKColor(), getStyle());
-
-		return true;
+		return bRet;
 	}
 
 public:
@@ -326,17 +371,17 @@ public:
 
 	void setPosition(int x, int y)
 	{
-		m_rect.X = x;
-		m_rect.Y = y;
+		consoleUI()->setControlRect(this, x, y, -1, -1, false);
 	}
 
 	void setWidth(int nWidth)
 	{
-		m_rect.nWidth = nWidth;
+		//rect().nWidth = nWidth;
+		consoleUI()->setControlRect(this, -1, -1, nWidth, -1, false);
 	}
 	int getWidth() const
 	{
-		return m_rect.nWidth;
+		return rect().nWidth;
 	}
 
 	void setTextColor(COLOR textColor)
@@ -366,10 +411,13 @@ public:
 		return m_bTransparent;
 	}
 
-protected:
-	virtual void setRect(const Rect &rect)
+	void setAutoWidth(bool b)
 	{
-		m_rect = rect;
+		m_bAutoWidth = b;
+	}
+	bool isAutoWidth()
+	{
+		return m_bAutoWidth;
 	}
 
 protected:
@@ -418,6 +466,352 @@ private:
 	bool m_bTransparent;
 
 	ALIGN m_align;
+	bool m_bAutoWidth;
+};
+
+
+//Check box
+typedef std::function<void(void)> FN_ON_CHECKED;
+class ConsoleCheckBox
+	: public Event
+	, public ControlSelectable
+{
+public:
+	ConsoleCheckBox(ConsoleUI *consoleUI = NULL)
+		: m_bChecked(true)
+		, m_bAutoWidth(false)
+		, m_bTransparent(false)
+	{
+		setConsoleUI(consoleUI);
+
+		consoleUI->setControlRect(this, -1, -1, 2, 1, false);
+
+		m_textColor = white;
+		m_bkColor = gray;
+	}
+
+	virtual bool draw()
+	{
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
+
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+
+			if (m_bAutoWidth && rect().nWidth != m_sContent.length() + 2)
+				consoleUI()->setControlRect(this, -1, -1, m_sContent.length() + 2, -1, false);
+
+			//draw box 
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight, textColor, bkColor, style);
+			if (m_bChecked)
+				consoleUI()->drawText(rect().X, rect().Y, "√");
+			else
+				consoleUI()->drawText(rect().X, rect().Y, "  ");
+			consoleUI()->createBorder(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight);
+
+			//draw text
+			if (rect().nWidth > 2)
+			{
+				std::string sDrawText = CutTooLongString(m_sContent, rect().nWidth - 2);
+				consoleUI()->drawText(rect().X + 2, rect().Y, sDrawText.c_str());
+
+				if (m_bTransparent)
+					consoleUI()->sweepRectColorAndStyle(rect().X + 2, rect().Y, rect().X + 2 + rect().nWidth - 2, rect().Y + rect().nHeight, this);
+				else
+					consoleUI()->fillColorAndStyle(rect().X + 2, rect().Y, rect().nWidth - 2, textColor, bkColor, style);
+			}
+
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
+	}
+
+	void setPosition(int x, int y)
+	{
+		consoleUI()->setControlRect(this, x, y, -1, -1, false);
+	}
+
+	virtual void setCheck(bool b)
+	{
+		m_bChecked = b;
+	}
+	bool isChecked() const
+	{
+		return m_bChecked;
+	}
+
+	void setContent(const char* txt)
+	{
+		m_sContent = txt;
+	}
+	std::string getContent() const
+	{
+		return m_sContent;
+	}
+
+	void setCheckEvent(FN_ON_CHECKED ev)
+	{
+		m_fnOnChecked = ev;
+	}
+
+	void setWidth(int n)
+	{
+		consoleUI()->setControlRect(this, -1, -1, n, -1, false);
+	}
+
+	void setAutoWidth(bool b)
+	{
+		m_bAutoWidth = b;
+	}
+	bool isAutoWidth() const
+	{
+		return m_bAutoWidth;
+	}
+
+	void setTransparent(bool b)
+	{
+		m_bTransparent = b;
+	}
+	bool isTransparent()
+	{
+		return m_bTransparent;
+	}
+
+protected:
+	virtual EVENT_TYPE eventType()
+	{
+		return KEY_EVENT | MOUSE_EVENT;
+	}
+
+	virtual void onInitEvent()
+	{
+
+	}
+
+	virtual void onEvent(INPUT_RECORD &input_record)
+	{
+		if (input_record.EventType == KEY_EVENT)
+		{
+			if (!input_record.Event.KeyEvent.bKeyDown)
+			{
+				return;
+			}
+
+			WORD k = (input_record.Event.KeyEvent.wVirtualKeyCode);
+			switch (k)
+			{
+				
+			}
+		}
+		else if (MOUSE_EVENT == input_record.EventType)
+		{
+			if (input_record.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED)
+			{
+				int nX = input_record.Event.MouseEvent.dwMousePosition.X;
+				int nY = input_record.Event.MouseEvent.dwMousePosition.Y;
+
+				setCheck(!isChecked());
+				consoleUI()->redrawControl(this, false, false);
+
+				onCheck();
+			}
+		}
+	}
+
+public:
+	virtual void onCheck()
+	{
+		if (m_fnOnChecked)
+			m_fnOnChecked();
+	}
+
+protected:
+	bool m_bChecked;
+	std::string m_sContent;
+
+	FN_ON_CHECKED m_fnOnChecked;
+	bool m_bAutoWidth;
+	bool m_bTransparent;
+
+};
+
+
+//Check box
+typedef std::function<void(void)> FN_ON_CHECKED;
+class ConsoleRadioBox
+	: public ConsoleCheckBox
+{
+public:
+	class Group
+	{
+	public:
+		Group() 
+		{
+		}
+
+		void addRadioBox(ConsoleRadioBox* pRadioBox)
+		{
+			pRadioBox->setGroup(this);
+
+			m_vctRadioBoxs.push_back(pRadioBox);
+
+			if (m_vctRadioBoxs.size() == 1)
+			{
+				setCheck(pRadioBox);
+			}
+		}
+
+		void removeRadioBox(ConsoleRadioBox* pRadioBox)
+		{
+			for (int i = 0; i < m_vctRadioBoxs.size(); ++i)
+			{
+				if (m_vctRadioBoxs[i] == pRadioBox)
+				{
+					m_vctRadioBoxs.erase(m_vctRadioBoxs.begin() + i);
+					return;
+				}
+			}
+		}
+		void removeRadioBox(int n)
+		{
+			for (int i = 0; i < m_vctRadioBoxs.size(); ++i)
+			{
+				if (i == n)
+				{
+					m_vctRadioBoxs.erase(m_vctRadioBoxs.begin() + i);
+					return;
+				}
+			}
+		}
+
+		int getCheckedIdx()
+		{
+			for (int i = 0; i < m_vctRadioBoxs.size(); ++i)
+			{
+				if (m_vctRadioBoxs[i]->isChecked())
+					return i;
+			}
+
+			return -1;
+		}
+
+		ConsoleRadioBox* getCheckedRadioBox()
+		{
+			return m_vctRadioBoxs[getCheckedIdx()];
+		}
+
+		void setCheck(int n)
+		{
+			for (int i = 0; i < m_vctRadioBoxs.size(); ++i)
+			{
+				if (i == n)
+					m_vctRadioBoxs[i]->m_bChecked = true;
+				else
+					m_vctRadioBoxs[i]->m_bChecked = false;
+
+				m_vctRadioBoxs[i]->draw();
+			}
+		}
+
+		void setCheck(ConsoleRadioBox* pRadioBox)
+		{
+			for (int i = 0; i < m_vctRadioBoxs.size(); ++i)
+			{
+				if (m_vctRadioBoxs[i] == pRadioBox)
+					m_vctRadioBoxs[i]->m_bChecked = true;
+				else
+					m_vctRadioBoxs[i]->m_bChecked = false;
+
+				m_vctRadioBoxs[i]->draw();
+			}
+		}
+
+	private:
+		std::vector<ConsoleRadioBox*> m_vctRadioBoxs;
+	};
+
+public:
+	ConsoleRadioBox(ConsoleUI *consoleUI = NULL, Group* pGroup=NULL)
+		: ConsoleCheckBox(consoleUI)
+		, m_pGroup(pGroup)
+	{
+		setConsoleUI(consoleUI);
+		m_bChecked = false;
+	}
+
+	virtual bool draw()
+	{
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
+
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+
+			if (m_bAutoWidth && rect().nWidth != m_sContent.length() + 2)
+				consoleUI()->setControlRect(this, -1, -1, m_sContent.length() + 2, -1, false);
+
+			//draw box 
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight, textColor, bkColor, style);
+			if (m_bChecked)
+				consoleUI()->drawText(rect().X, rect().Y, "◆");
+			else
+				consoleUI()->drawText(rect().X, rect().Y, "  ");
+			consoleUI()->createBorder(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight);
+
+			//draw text
+			if (rect().nWidth > 2)
+			{
+				std::string sDrawText = CutTooLongString(m_sContent, rect().nWidth - 2);
+				consoleUI()->drawText(rect().X + 2, rect().Y, sDrawText.c_str());
+
+				if (m_bTransparent)
+					consoleUI()->sweepRectColorAndStyle(rect().X + 2, rect().Y, rect().X + 2 + rect().nWidth - 2, rect().Y + rect().nHeight, this);
+				else
+					consoleUI()->fillColorAndStyle(rect().X + 2, rect().Y, rect().nWidth - 2, textColor, bkColor, style);
+			}
+
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
+	}
+
+	virtual void setCheck(bool b)
+	{
+		if (NULL == m_pGroup)
+		{
+			m_bChecked = b;
+		}
+		else
+		{
+			m_pGroup->setCheck(this);
+		}
+	}
+
+	void setGroup(ConsoleRadioBox::Group* pGroup)
+	{
+		m_pGroup = pGroup;
+	}
+	ConsoleRadioBox::Group* getGroup() 
+	{
+		return m_pGroup;
+	}
+
+private:
+	ConsoleRadioBox::Group* m_pGroup;
 };
 
 
@@ -438,33 +832,33 @@ public:
 	{
 		setConsoleUI(consoleUI);
 
-		setBKColor(white);
+		setBkColor(white);
 		setTextColor(black);
 
-		m_broderColor.setBKColor(gray);
+		m_broderColor.setBkColor(gray);
 		m_broderColor.setTextColor(color_default);
 		m_broderColor.setStyle(style_default);
 
-		m_selectedColor.setBKColor(blue);
-		m_selectedColor.setTextColor(color_default);
-		m_selectedColor.setStyle((STYLE)(common_lvb_grid_horizontal | common_lvb_underscore));
+		m_selectedItemColor.setBkColor(blue);
+		m_selectedItemColor.setTextColor(color_default);
+		m_selectedItemColor.setStyle((STYLE)(common_lvb_grid_horizontal | common_lvb_underscore));
 	}
 
 	int getContentStartX() const
 	{
-		return m_rect.X + borderWidth * 2;
+		return rect().X + borderWidth * 2;
 	}
 	int getContentEndX() const
 	{
-		return m_rect.X + m_rect.nWidth - borderWidth * 2;
+		return rect().X + rect().nWidth - borderWidth * 2;
 	}
 	int getContentStartY() const
 	{
-		return m_rect.Y + borderWidth;
+		return rect().Y + borderWidth;
 	}
 	int getContentEndY() const
 	{
-		return m_rect.Y + m_rect.nHeight - borderWidth;
+		return rect().Y + rect().nHeight - borderWidth;
 	}
 	int getContentLines() const
 	{
@@ -475,32 +869,34 @@ public:
 	{
 		int nButtonCount = 4;
 		int nButtonWidth = 6;
-		int nPageStartX = m_rect.nWidth - nButtonWidth * nButtonCount - 2 * 2 - nButtonCount;//	nButtonWidth*2：两个按钮；2*2：竖向边框占2格，并且有2个竖向边框
+		int nPageStartX = rect().nWidth - nButtonWidth * nButtonCount - 2 * 2 - nButtonCount;//	nButtonWidth*2：两个按钮；2*2：竖向边框占2格，并且有2个竖向边框
 		
 		{
-			m_btPrePage.setBKColor(white);
+			m_btPrePage.setBkColor(white);
 			m_btPrePage.setTextColor(black);
 			m_btPrePage.setCaption("上一页");
+			m_btPrePage.setSelectable(true);
 			Rect rectBtPre;
-			rectBtPre.X = m_rect.X + nPageStartX;
-			rectBtPre.Y = m_rect.Y + m_rect.nHeight - 1;
+			rectBtPre.X = rect().X + nPageStartX;
+			rectBtPre.Y = rect().Y + rect().nHeight - 1;
 			rectBtPre.nWidth = nButtonWidth;
 			rectBtPre.nHeight = 1;
-			m_btPrePage.setRect(rectBtPre);
+			consoleUI()->setControlRect(&m_btPrePage, rectBtPre, false);
 			consoleUI()->addControl(&m_btPrePage, false);
 			m_btPrePage.setClickedEvent(std::bind(&ConsoleListBox::onClickPrePage, this));
 			consoleUI()->addEvent(&m_btPrePage);
 
 			nPageStartX += nButtonWidth + 1;
-			m_btNextPage.setBKColor(white);
+			m_btNextPage.setBkColor(white);
 			m_btNextPage.setTextColor(black);
 			m_btNextPage.setCaption("下一页");
+			m_btNextPage.setSelectable(true);
 			Rect rectBtNext;
-			rectBtNext.X = m_rect.X + nPageStartX;
-			rectBtNext.Y = m_rect.Y + m_rect.nHeight - 1;
+			rectBtNext.X = rect().X + nPageStartX;
+			rectBtNext.Y = rect().Y + rect().nHeight - 1;
 			rectBtNext.nWidth = nButtonWidth;
 			rectBtNext.nHeight = 1;
-			m_btNextPage.setRect(rectBtNext);
+			consoleUI()->setControlRect(&m_btNextPage, rectBtNext, false);
 			consoleUI()->addControl(&m_btNextPage, false);
 			m_btNextPage.setClickedEvent(std::bind(&ConsoleListBox::onClickNextPage, this));
 			consoleUI()->addEvent(&m_btNextPage);
@@ -509,96 +905,105 @@ public:
 		nPageStartX += 1;
 		{
 			nPageStartX += nButtonWidth + 1;
-			m_btPreItem.setBKColor(white);
+			m_btPreItem.setBkColor(white);
 			m_btPreItem.setTextColor(black);
 			m_btPreItem.setCaption("上一项");
+			m_btPreItem.setSelectable(true);
 			Rect rectBtPre;
-			rectBtPre.X = m_rect.X + nPageStartX;
-			rectBtPre.Y = m_rect.Y + m_rect.nHeight - 1;
+			rectBtPre.X = rect().X + nPageStartX;
+			rectBtPre.Y = rect().Y + rect().nHeight - 1;
 			rectBtPre.nWidth = nButtonWidth;
 			rectBtPre.nHeight = 1;
-			m_btPreItem.setRect(rectBtPre);
+			consoleUI()->setControlRect(&m_btPreItem, rectBtPre, false);
 			consoleUI()->addControl(&m_btPreItem, false);
 			m_btPreItem.setClickedEvent(std::bind(&ConsoleListBox::onClickPreItem, this));
 			consoleUI()->addEvent(&m_btPreItem);
 
 			nPageStartX += nButtonWidth + 1;
-			m_btNextItem.setBKColor(white);
+			m_btNextItem.setBkColor(white);
 			m_btNextItem.setTextColor(black);
 			m_btNextItem.setCaption("下一项");
+			m_btNextItem.setSelectable(true);
 			Rect rectBtNext;
-			rectBtNext.X = m_rect.X + nPageStartX;
-			rectBtNext.Y = m_rect.Y + m_rect.nHeight - 1;
+			rectBtNext.X = rect().X + nPageStartX;
+			rectBtNext.Y = rect().Y + rect().nHeight - 1;
 			rectBtNext.nWidth = nButtonWidth;
 			rectBtNext.nHeight = 1;
-			m_btNextItem.setRect(rectBtNext);
+			consoleUI()->setControlRect(&m_btNextItem, rectBtNext, false);
 			consoleUI()->addControl(&m_btNextItem, false);
 			m_btNextItem.setClickedEvent(std::bind(&ConsoleListBox::onClickNextItem, this));
 			consoleUI()->addEvent(&m_btNextItem);
 		}
 	}
-
+	
 	virtual bool draw()
 	{
-		if (!Control::draw())
-			return false;
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
 
-		//draw border rectange
-		consoleUI()->createBox(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight,
-			m_broderColor.getTextColor(), m_broderColor.getBKColor(), m_broderColor.getStyle());
+			//draw border rectange
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight,
+				m_broderColor.getTextColor(), m_broderColor.getBkColor(), m_broderColor.getStyle());
 
-		//draw content rectange
-		consoleUI()->createBox(getContentStartX(), getContentStartY(), getContentEndX(), getContentEndY(),
-			getTextColor(), getBKColor(), getStyle());
+			//draw content rectange
+			consoleUI()->createBox(getContentStartX(), getContentStartY(), getContentEndX(), getContentEndY(),
+				getTextColor(), getBkColor(), getStyle());
 
-		//draw contents
-		// get visible contents
-		if (m_vctContents.size() > 0)
-		{
-			if (m_nIdx < 0)
-				m_nIdx = 0;
-			else if (m_nIdx >= m_vctContents.size())
-				m_nIdx = m_vctContents.size() - 1;
-
-			for (int i = 0; i < getContentLines() && (m_nVisibleStart + i) < m_vctContents.size(); ++i)
+			//draw contents
+			// get visible contents
+			if (m_vctContents.size() > 0)
 			{
-				consoleUI()->drawText(getContentStartX(), getContentStartY() + i, 
-					CutTooLongString(m_vctContents[m_nVisibleStart + i], getContentEndX()- getContentStartX()).c_str());
+				if (m_nIdx < 0)
+					m_nIdx = 0;
+				else if (m_nIdx >= m_vctContents.size())
+					m_nIdx = m_vctContents.size() - 1;
 
-				consoleUI()->fillColorAndStyle(getContentStartX(), getContentStartY() + i, getContentEndX() - getContentStartX(),
-					getTextColor(), getBKColor(), (STYLE)(common_lvb_underscore));
+				for (int i = 0; i < getContentLines() && (m_nVisibleStart + i) < m_vctContents.size(); ++i)
+				{
+					consoleUI()->drawText(getContentStartX(), getContentStartY() + i,
+						CutTooLongString(m_vctContents[m_nVisibleStart + i], getContentEndX() - getContentStartX()).c_str());
+
+					consoleUI()->fillColorAndStyle(getContentStartX(), getContentStartY() + i, getContentEndX() - getContentStartX(),
+						getTextColor(), getBkColor(), (STYLE)(common_lvb_underscore));
+				}
+
+				//current select
+				consoleUI()->fillColorAndStyle(getContentStartX(), getContentStartY() + (m_nIdx - m_nVisibleStart), getContentEndX() - getContentStartX(),
+					m_selectedItemColor.getTextColor(), m_selectedItemColor.getBkColor(), m_selectedItemColor.getStyle());
 			}
 
-			//current select
-			consoleUI()->fillColorAndStyle(getContentStartX(), getContentStartY() + (m_nIdx - m_nVisibleStart), getContentEndX() - getContentStartX(),
-				m_selectedColor.getTextColor(), m_selectedColor.getBKColor(), m_selectedColor.getStyle());
-		}
+			//draw pre page
+			m_btPrePage.draw();
+			//draw next page
+			m_btNextPage.draw();
+			//draw pre item
+			m_btPreItem.draw();
+			//draw next item
+			m_btNextItem.draw();
 
-		//draw pre page
-		m_btPrePage.draw();
-		//draw next page
-		m_btNextPage.draw();
-		//draw pre item
-		m_btPreItem.draw();
-		//draw next item
-		m_btNextItem.draw();
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
 
-		return true;
+		return bRet;
 	}
 
 	void setBorderColor(COLOR bkColor)
 	{
-		m_broderColor.setBKColor(bkColor);
+		m_broderColor.setBkColor(bkColor);
 	}
 	
 	void setSelectedColor(COLOR bkColor, COLOR textColor=color_default, STYLE style=style_default)
 	{
 		if (color_default != bkColor)
-			m_selectedColor.setBKColor(bkColor);
+			m_selectedItemColor.setBkColor(bkColor);
 		if (textColor != color_default)
-			m_selectedColor.setTextColor(textColor);
+			m_selectedItemColor.setTextColor(textColor);
 		if (style != style_default)
-			m_selectedColor.setStyle(style);
+			m_selectedItemColor.setStyle(style);
 	}
 
 	virtual void getPointColorAndStyle(int x, int y, COLOR& bkClolor, COLOR& textColor, STYLE& style) const
@@ -611,13 +1016,13 @@ public:
 		if (!rect.isIn(x, y))
 		{//border
 			textColor = m_broderColor.getTextColor();
-			bkClolor = m_broderColor.getBKColor();
+			bkClolor = m_broderColor.getBkColor();
 			style = m_broderColor.getStyle();
 		}
 		else
 		{//in
 			textColor = getTextColor();
-			bkClolor = getBKColor();
+			bkClolor = getBkColor();
 			style = getStyle();
 		}
 	}
@@ -819,8 +1224,8 @@ protected:
 		refreshPageButtons(false);
 		consoleUI()->redrawControl(this);
 
-		//设置焦点到本控件
-		consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
+		////设置焦点到本控件
+		//consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
 	}
 
 	void onClickNextItem()
@@ -846,8 +1251,8 @@ protected:
 		refreshPageButtons(false);
 		consoleUI()->redrawControl(this);
 
-		//设置焦点到本控件
-		consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
+		////设置焦点到本控件
+		//consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
 	}
 
 protected:
@@ -888,7 +1293,7 @@ protected:
 
 private:
 	ConsoleColor m_broderColor;
-	ConsoleColor m_selectedColor;
+	ConsoleColor m_selectedItemColor;
 
 	int m_nIdx;
 	int m_nVisibleStart;
@@ -906,12 +1311,15 @@ private:
 //Console Input Box
 class ConsoleInputBox
 	: public Event
-	, public Control
+	, public ControlSelectable
 {
 public:
 	ConsoleInputBox(ConsoleUI *consoleUI = NULL)
 	{
 		setConsoleUI(consoleUI);
+
+		m_colorSelected.setTextColor(black);
+		m_colorSelected.setBkColor(white);
 	}
 
 	virtual ~ConsoleInputBox() { }
@@ -924,77 +1332,89 @@ public:
 
 	virtual bool draw()
 	{
-		if (!Control::draw())
-			return false;
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
 
-		if (color_default == m_textColor)
-		{
-			m_textColor = white;
-		}
-		if (color_default == m_bkColor)
-		{
-			m_bkColor = GL::black;
-		}
-
-		//draw input box
-		consoleUI()->createBox(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth, m_rect.Y + m_rect.nHeight, m_textColor, m_bkColor, m_Style);
-		//parent()->fillColorAndStyle(m_rect.X, m_rect.Y, m_rect.nWidth, m_textColor, m_bkColor, (STYLE)(common_lvb_underscore));
-
-		//draw content
-		int nLinesNeed = m_content.size() / getContentALineWidth();
-		if (m_content.size() % getContentALineWidth() != 0)
-			++nLinesNeed;//剩余的字符串还需要额外一行
-		std::string sDrawText;
-		if (nLinesNeed > getContentLines())
-		{//内容多于可显示的area，则截取内容以便显示
-			size_t startZh = ZH_origIdxToZhIdx(m_content, m_content.size() - getVisibleContentLength());
-			sDrawText = ZH_subString(m_content, startZh + 1);
-			nLinesNeed = getContentLines();
-		}
-		else
-		{//显示全部内容
-			sDrawText = m_content;
-		}
-		//展示内容
-		int nLineY = m_rect.Y;
-		for (int i = 0; i < nLinesNeed; ++i)
-		{
-			if (i == nLinesNeed - 1)
+			if (color_default == m_textColor)
 			{
-				consoleUI()->drawText(m_rect.X, nLineY, sDrawText.c_str());
+				m_textColor = white;
+			}
+			if (color_default == m_bkColor)
+			{
+				m_bkColor = GL::black;
+			}
+
+			COLOR textColor = color_default;
+			COLOR bkColor = color_default;
+			STYLE style = style_default;
+			getDrawColorAndStyle(textColor, bkColor, style);
+
+			//draw input box
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth - 1, rect().Y + rect().nHeight, textColor, bkColor, style);
+			//parent()->fillColorAndStyle(rect().X, rect().Y, rect().nWidth, m_textColor, m_bkColor, (STYLE)(common_lvb_underscore));
+
+			//draw content
+			int nLinesNeed = m_content.size() / getContentALineWidth();
+			if (m_content.size() % getContentALineWidth() != 0)
+				++nLinesNeed;//剩余的字符串还需要额外一行
+			std::string sDrawText;
+			if (nLinesNeed > getContentLines())
+			{//内容多于可显示的area，则截取内容以便显示
+				size_t startZh = ZH_origIdxToZhIdx(m_content, m_content.size() - getVisibleContentLength());
+				sDrawText = ZH_subString(m_content, startZh + 1);
+				nLinesNeed = getContentLines();
 			}
 			else
-			{
-				size_t zhIdx = ZH_origIdxToZhIdx(sDrawText, getContentALineWidth());
-				consoleUI()->drawText(m_rect.X, nLineY, ZH_subString(sDrawText, 0, zhIdx).c_str());
-
-				sDrawText = ZH_subString(sDrawText, zhIdx);
+			{//显示全部内容
+				sDrawText = m_content;
 			}
-			++nLineY;
-		}
+			//展示内容
+			int nLineY = rect().Y;
+			for (int i = 0; i < nLinesNeed; ++i)
+			{
+				if (i == nLinesNeed - 1)
+				{//最后一行
+					consoleUI()->drawText(rect().X, nLineY, sDrawText.c_str());
+				}
+				else
+				{
+					size_t zhIdx = ZH_origIdxToZhIdx(sDrawText, getContentALineWidth());
+					consoleUI()->drawText(rect().X, nLineY, ZH_subString(sDrawText, 0, zhIdx).c_str());
 
-		//边框
-		consoleUI()->createBorder(m_rect.X, m_rect.Y, m_rect.X + m_rect.nWidth - 1, m_rect.Y + m_rect.nHeight);
+					sDrawText = ZH_subString(sDrawText, zhIdx);
+				}
+				++nLineY;
+			}
 
-		return true;
+			//边框
+			consoleUI()->createBorder(rect().X, rect().Y, rect().X + rect().nWidth - 1, rect().Y + rect().nHeight);
+
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
 	}
 
 public:
 	int getContentStartX() const
 	{
-		return m_rect.X;
+		return rect().X;
 	}
 	int getContentStartY() const
 	{
-		return m_rect.Y;
+		return rect().Y;
 	}
 	int getContentALineWidth() const
 	{
-		return m_rect.nWidth;
+		return rect().nWidth-1;
 	}
 	int getContentLines() const
 	{
-		return m_rect.nHeight;
+		return rect().nHeight;
 	}
 	int getVisibleContentLength() const
 	{
@@ -1004,13 +1424,18 @@ public:
 	//设置焦点
 	bool setFocus()
 	{
-		//如果输入后焦点在输入框外了，就把焦点设置回输入框中
-		COORD curPt = consoleUI()->getCurPosition();
-		if (!m_rect.isIn(curPt.X, curPt.Y))
-		{
-			consoleUI()->setCurPosition(m_rect.X + m_rect.nWidth - 1, curPt.Y);
-			return true;
-		}
+		////如果输入后焦点在输入框外了，就把焦点设置回输入框中
+		//COORD curPt = consoleUI()->getCurPosition();
+		//if (!rect().isIn(curPt.X, curPt.Y))
+		//{
+		//	consoleUI()->setCurPosition(rect().X + rect().nWidth - 1, curPt.Y);
+		//	return true;
+		//}
+
+		int nSelX = m_content.length();
+		if (nSelX > getContentALineWidth()-1)
+			nSelX = getContentALineWidth()-1;
+		consoleUI()->setCurPosition(rect().X + nSelX, rect().Y);
 
 		return false;
 	}
@@ -1026,18 +1451,11 @@ public:
 
 	void setPosition(int x, int y)
 	{
-		m_rect.X = x;
-		m_rect.Y = y;
+		consoleUI()->setControlRect(this, x, y, -1, -1, false);
 	}
 	void setWidth(int nWidth)
 	{
-		m_rect.nWidth = nWidth;
-	}
-
-protected:
-	virtual void setRect(const Rect &rect)
-	{
-		m_rect = rect;
+		consoleUI()->setControlRect(this, -1, -1, nWidth, -1, false);
 	}
 
 protected:
@@ -1058,13 +1476,14 @@ protected:
 		{
 			if (input_record.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED)
 			{
-				int nX = input_record.Event.MouseEvent.dwMousePosition.X;
-				int nY = input_record.Event.MouseEvent.dwMousePosition.Y;
-				//if (parent()->getTopControl(nX, nY) == this)
-				{
-					//设置焦点到本控件
-					consoleUI()->setCurPosition(nX, nY);
-				}
+				//int nX = input_record.Event.MouseEvent.dwMousePosition.X;
+				//int nY = input_record.Event.MouseEvent.dwMousePosition.Y;
+				////if (parent()->getTopControl(nX, nY) == this)
+				//{
+				//	//设置焦点到本控件
+				//	consoleUI()->setCurPosition(nX, nY);
+				//}
+				setFocus();
 			}
 
 		}
@@ -1088,29 +1507,29 @@ protected:
 				case 38://上
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					if (curPt.Y > m_rect.Y)
+					if (curPt.Y > rect().Y)
 						consoleUI()->setCurPosition(curPt.X, curPt.Y - 1);
 					break;
 				}
 				case 40://下
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					if (curPt.Y < m_rect.Y + m_rect.nHeight - 1)
+					if (curPt.Y < rect().Y + rect().nHeight - 1)
 						consoleUI()->setCurPosition(curPt.X, curPt.Y + 1);
 					break;
 				}
 				case 37://左
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					if (curPt.X > m_rect.X)
+					if (curPt.X > rect().X)
 					{
 						consoleUI()->setCurPosition(curPt.X - 1, curPt.Y);
 					}
 					else
 					{
-						if (curPt.Y > m_rect.Y)//判断是否还可以移到上一行
+						if (curPt.Y > rect().Y)//判断是否还可以移到上一行
 						{//向上一行尾部移动
-							consoleUI()->setCurPosition(m_rect.X + m_rect.nWidth - 1, curPt.Y - 1);
+							consoleUI()->setCurPosition(rect().X + rect().nWidth - 1, curPt.Y - 1);
 						}
 					}
 					break;
@@ -1118,15 +1537,15 @@ protected:
 				case 39://右
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					if (curPt.X < m_rect.X + m_rect.nWidth - 1)
+					if (curPt.X < rect().X + rect().nWidth - 1)
 					{
 						consoleUI()->setCurPosition(curPt.X + 1, curPt.Y);
 					}
 					else
 					{
-						if (curPt.Y < m_rect.Y + m_rect.nHeight - 1)//判断是否还可以移到下一行
+						if (curPt.Y < rect().Y + rect().nHeight - 1)//判断是否还可以移到下一行
 						{//向下一行首部移动
-							consoleUI()->setCurPosition(m_rect.X, curPt.Y + 1);
+							consoleUI()->setCurPosition(rect().X, curPt.Y + 1);
 						}
 					}
 					break;
@@ -1134,13 +1553,13 @@ protected:
 				case 36://home
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					consoleUI()->setCurPosition(0, curPt.Y);
+					consoleUI()->setCurPosition(rect().X, curPt.Y);
 					break;
 				}
 				case 35://end
 				{
 					COORD curPt = consoleUI()->getCurPosition();
-					consoleUI()->setCurPosition(consoleUI()->getConsoleScreenInfo().dwSize.X - 1, curPt.Y);
+					consoleUI()->setCurPosition(rect().X + rect().nWidth - 1, curPt.Y);
 					break;
 				}
 				case 67://Ctrl + c
@@ -1168,10 +1587,10 @@ protected:
 							//parent()->drawText(pt.X, pt.Y, c);
 							draw();
 
-							if (curPt.X > m_rect.X + m_rect.nWidth - 2/*是否到达转下行*/
-								&& curPt.Y < m_rect.Y + m_rect.nHeight - 1/*是否可以转*/)
+							if (curPt.X > rect().X + rect().nWidth - 2/*是否到达转下行*/
+								&& curPt.Y < rect().Y + rect().nHeight - 1/*是否可以转*/)
 							{
-								consoleUI()->setCurPosition(m_rect.X, curPt.Y + 1);
+								consoleUI()->setCurPosition(rect().X, curPt.Y + 1);
 							}
 						}
 						//else if (input_record.Event.KeyEvent.uChar.AsciiChar == 13)//回车
@@ -1191,10 +1610,10 @@ protected:
 						//parent()->drawTextW(pt.X, pt.Y, c);
 						draw();
 
-						if (curPt.X > m_rect.X + m_rect.nWidth - 4/*是否到达转下行*/
-							&& curPt.Y < m_rect.Y + m_rect.nHeight - 1/*是否可以转*/)
+						if (curPt.X > rect().X + rect().nWidth - 4/*是否到达转下行*/
+							&& curPt.Y < rect().Y + rect().nHeight - 1/*是否可以转*/)
 						{
-							consoleUI()->setCurPosition(m_rect.X, curPt.Y + 1);
+							consoleUI()->setCurPosition(rect().X, curPt.Y + 1);
 						}
 					}
 
@@ -1210,6 +1629,106 @@ protected:
 
 private:
 	std::string m_content;
+};
+
+//Tab select
+class EventTabSelect
+	: public Event
+{
+public:
+	EventTabSelect(ConsoleUI *consoleUI = NULL)
+		: m_nSelectedLayerId(-1)
+		, m_pCurSelCtrl(NULL)
+	{
+		setConsoleUI(consoleUI);
+
+		setGlobalEvent(true);
+	}
+
+	//获得可选择控件，如果nStartLayerId不是ControlSelectable，则向下找，如果到尾则回到首部开始向下找
+	ControlSelectable* getSelectableControl(int nStartLayerId)
+	{
+		int nCtrlCount = consoleUI()->getControls().size();
+		for (int i = 0; i < nCtrlCount; ++i)
+		{
+			ControlSelectable* pCtrl = dynamic_cast<ControlSelectable*>(consoleUI()->getControls()[(nStartLayerId + i) % nCtrlCount]);
+			if (pCtrl != NULL && pCtrl->isVisible() && pCtrl->isEnable() && pCtrl->isSelectable())
+				return pCtrl;
+		}
+
+		return NULL;
+	}
+
+protected:
+	virtual EVENT_TYPE eventType()
+	{
+		return KEY_EVENT;
+	}
+
+	virtual void onEvent(INPUT_RECORD &input_record)
+	{
+		if (KEY_EVENT == input_record.EventType)
+		{
+			if (!input_record.Event.KeyEvent.bKeyDown)
+			{
+				return;
+			}
+
+			//check cur idx
+			Control* pActiveCtrl = consoleUI()->getActiveControl();
+			if (pActiveCtrl != NULL)
+			{
+				m_nSelectedLayerId = consoleUI()->getControlLayerId(pActiveCtrl);
+			}
+
+			COORD curPt = consoleUI()->getCurPosition();
+
+			WORD k = (input_record.Event.KeyEvent.wVirtualKeyCode);
+			switch (k)
+			{
+			case 9://tab
+			{
+				ControlSelectable* pCtrlNext = getSelectableControl(++m_nSelectedLayerId);
+				if (NULL != pCtrlNext)
+				{
+					consoleUI()->setCurPosition(pCtrlNext->rect().X, pCtrlNext->rect().Y);
+					//consoleUI()->redrawControl(pCtrlNext);
+					pCtrlNext->draw();
+
+					if (NULL != m_pCurSelCtrl)
+					{
+						//consoleUI()->redrawControl(m_pCurSelCtrl);
+						m_pCurSelCtrl->draw();
+					}
+
+					m_pCurSelCtrl = pCtrlNext;
+				}
+				break;
+			}
+			case 13://回车
+			{
+				Control* pActiveCtrl = consoleUI()->getActiveControl();
+				ConsoleButton* pButton = NULL;
+				ConsoleCheckBox* pCheckBox = NULL;
+				if (NULL != (pButton = dynamic_cast<ConsoleButton*>(pActiveCtrl)))
+				{
+					pButton->onClicked();
+				}
+				else if (NULL != (pCheckBox = dynamic_cast<ConsoleCheckBox*>(pActiveCtrl)))
+				{
+					pCheckBox->setCheck(!pCheckBox->isChecked());
+					pCheckBox->onCheck();
+					consoleUI()->redrawControl(pCheckBox);
+				}
+				break;
+			}
+			}
+		}
+	}
+
+private:
+	int m_nSelectedLayerId;
+	ControlSelectable* m_pCurSelCtrl;
 };
 
 ｝NS_END

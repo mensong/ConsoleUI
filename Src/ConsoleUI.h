@@ -397,7 +397,6 @@ public:
 			m_Style = style_default;
 
 		clearScreen(m_textColor, m_bkColor, m_Style);
-
 	}
 
 	~ConsoleUI() {}
@@ -416,6 +415,21 @@ public:
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 		GetConsoleScreenBufferInfo(m_hOut, &csbi);
 		return csbi;
+	}
+
+	void setScreenBufferSize(int nWidth=-1, int nHeight=-1)
+	{
+		CONSOLE_SCREEN_BUFFER_INFO csbi = getConsoleScreenInfo();
+		if (nWidth > 0)
+		{
+			csbi.dwSize.X = nWidth;
+		}
+		if (nHeight > 0)
+		{
+			csbi.dwSize.Y = nHeight;
+		}
+		
+		SetConsoleScreenBufferSize(m_hOut, csbi.dwSize);
 	}
 
 	WORD getAttributeByPoint(int x, int y)
@@ -1061,8 +1075,13 @@ public:
 	}
 
 	//如果rectTo中的属性为-1时不改变原值
-	BOOL setControlRect(Control* pControl, const Rect& rectTo, bool redraw /*= false*/)
+	BOOL setControlRect(Control* pControl, const Rect& rectTo, bool redraw=false, bool bFailOverWidth=true)
 	{
+		if (bFailOverWidth && rectTo.X + rectTo.nWidth > getConsoleScreenInfo().dwSize.X)
+		{
+			return FALSE;
+		}
+
 		Rect _rectFrom = pControl->getRect();
 		Rect _rectTo(
 			rectTo.X == -1 ? _rectFrom.X : rectTo.X, rectTo.Y == -1 ? _rectFrom.Y : rectTo.Y,
@@ -1103,9 +1122,9 @@ public:
 		return bRet;
 	}
 
-	BOOL setControlRect(Control* pControl, int tox=-1, int toy=-1, int toWidth=-1, int toHeight=-1, bool redraw = false)
+	BOOL setControlRect(Control* pControl, int tox=-1, int toy=-1, int toWidth=-1, int toHeight=-1, bool redraw = false, bool bFailOverWidth = true)
 	{
-		return setControlRect(pControl, Rect(tox, toy, toWidth, toHeight), redraw);
+		return setControlRect(pControl, Rect(tox, toy, toWidth, toHeight), redraw, bFailOverWidth);
 	}
 
 	void sweepControlColorAndStyle(Control* pControl)
@@ -1122,7 +1141,6 @@ public:
 	void sweepRectColorAndStyle(int x1, int y1, int x2, int y2, Control* pExclude = NULL,
 		COLOR textColor = color_default, COLOR bkColor = color_default, STYLE style = style_default)
 	{
-
 		for (int x = x1; x < x2; ++x)
 		{
 			for (int y = y1; y < y2; ++y)
@@ -1331,26 +1349,27 @@ public:
 					continue;
 
 				bool bExe = false;
-				if (pEvent->isGlobalEvent())
-				{//如果是全局事件，则无论如何都执行
+
+				Control* pCtrl = dynamic_cast<Control*>(pEvent);
+				if (NULL == pCtrl)
+				{//此处为控制台直系事件，它们在任何时候都能触发
 					bExe = true;
 				}
 				else
 				{
-					Control* pCtrl = dynamic_cast<Control*>(pEvent);
-					if (NULL == pCtrl)
-					{//App上的直系事件在任何时候都能触发
+					//if (input_record.Event.MouseEvent.dwButtonState != 0)
+					//	int n = 0;
+
+					//检测控件enable
+					if (!pCtrl->isEnable())
+						continue;
+
+					if (pEvent->isGlobalEvent())
+					{//如果是全局事件，则无论如何都执行
 						bExe = true;
 					}
 					else
 					{
-						if (input_record.Event.MouseEvent.dwButtonState != 0)
-							int n = 0;
-
-						//检测控件enable
-						if (!pCtrl->isEnable())
-							continue;
-
 						//控件鼠标事件只有在鼠标在控件上面时才触发
 						if (MOUSE_EVENT == input_record.EventType
 							&& (getControlAtPoint(
@@ -1377,7 +1396,6 @@ public:
 
 		//reset input mode
 		SetConsoleMode(m_hIn, oldMode);
-
 	}
 
 	void redraw()
@@ -1430,7 +1448,6 @@ private:
 	HANDLE		m_hIn;      /* Handle to the "keyboard" */
 
 	EVENT_MAP m_mapEvents;
-
 	bool m_loop;
 
 	std::vector<Control*> m_vctControls;

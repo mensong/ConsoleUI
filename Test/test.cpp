@@ -38,15 +38,22 @@ protected:
 
 void main(int argc, char** argv)
 {
+	//检测是否开启开速编辑模式，如果开始了，则会导致鼠标点击无效
 	QuickEditCheck qec;	
 
+	//新建一个控制台界面
 	ConsoleUI consoleUI/*(GL::COLOR::dark_cyan)*/;
 	consoleUI.setTitle("Console UI 演示");
+	consoleUI.setScreenBufferSize(120);
 
+	//注册控制台事件
+	//  EventResizeWindow事件是防止控制台Resize后发生错乱
 	EventResizeWindow rw(&consoleUI);
 	consoleUI.addEvent(&rw);
+	//  ConsoleTabSelector可对带有selectable的控件进行控制
 	ConsoleTabSelector ts(&consoleUI);
 	consoleUI.addEvent(&ts);
+	//  Debug event
 #ifdef _DEBUG
 	EventDebug debug(&consoleUI);
 	debug.setGlobalEvent(true);
@@ -55,6 +62,7 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&debug);
 #endif
 
+	//Plane示例
 	ConsolePlane titlePlane(&consoleUI);
 	Rect rectTitle;
 	rectTitle.X = 0;
@@ -66,14 +74,16 @@ void main(int argc, char** argv)
 	consoleUI.addControl(&titlePlane);
 	consoleUI.addEvent(&titlePlane);
 
+	//Label示例
 	ConsoleLabel titleLabel(&consoleUI);
 	titleLabel.setWidth(consoleUI.getConsoleScreenInfo().dwSize.X);
 	titleLabel.setAlign(ConsoleLabel::center);
 	titleLabel.setPosition(0, 0);
 	titleLabel.setTextColor(GL::red);
-	titleLabel.setContent("Console UI v0.01 开源库 - Author: Gergul");
+	titleLabel.setContent("Console UI v0.01 开源库");
 	consoleUI.addControl(&titleLabel);
 
+	//ListBox示例
 	ConsoleListBox listBox(&consoleUI);
 	Rect rectList;
 	rectList.X = 2;
@@ -99,6 +109,7 @@ void main(int argc, char** argv)
 	tipLabel.setContent("请输入：");
 	consoleUI.addControl(&tipLabel);
 
+	//InputBox示例
 	ConsoleInputBox inputBox(&consoleUI);
 	inputBox.setPosition(73, 4);
 	inputBox.setWidth(15);
@@ -107,6 +118,7 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&inputBox);
 	consoleUI.addControl(&inputBox);
 
+	//派生Button示例
 	MyButton btSetText(&consoleUI);
 	btSetText.setCaption("设置文本");
 	btSetText.setSelectable(true);
@@ -127,6 +139,7 @@ void main(int argc, char** argv)
 	txtLabel.setTransparent(false);
 	consoleUI.addControl(&txtLabel);
 
+	//Button示例
 	std::function<void(void)> onGetTextClick = [&](void) -> void {
 		txtLabel.setContent(listBox.getSelectedItemText().c_str());
 		consoleUI.redrawControl(&txtLabel);
@@ -144,6 +157,7 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&btGetText);
 	consoleUI.addControl(&btGetText);
 
+	//CheckBox示例
 	ConsoleCheckBox cb(&consoleUI);
 	cb.setCheck(false);
 	cb.setPosition(65, 8);
@@ -153,7 +167,10 @@ void main(int argc, char** argv)
 	consoleUI.addControl(&cb);
 	consoleUI.addEvent(&cb);
 
+	//RadioBox示例
+	//  新建一个radio组
 	ConsoleRadioBox::Group rbg;
+	//  新建radiobox，然后加入到radio组中
 	ConsoleRadioBox rb1(&consoleUI);
 	rb1.setPosition(65, 10);
 	rb1.setAutoWidth(true);
@@ -187,6 +204,9 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&rb4);
 	rbg.addRadioBox(&rb4);
 
+	//切换界面示例
+	//  调用endLoopEvent结束调本界面，
+	//    然后用redraw和startLoopEvent启动新界面
 	std::function<void(void)> onTestClick = [&](void) -> void {
 		consoleUI.endLoopEvent();
 	};
@@ -203,12 +223,16 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&btEnd);
 	consoleUI.addControl(&btEnd);
 
-
+	//第2个控制台界面
 	ConsoleUI consoleUI2/*(GL::COLOR::dark_cyan)*/;
 	consoleUI2.setTitle("Console UI 演示");
 
 	EventMouseFollow mev2(&consoleUI2);
 	consoleUI2.addEvent(&mev2);
+	EventResizeWindow rw2(&consoleUI2);
+	consoleUI2.addEvent(&rw2);
+	ConsoleTabSelector ts2(&consoleUI2);
+	consoleUI.addEvent(&ts2);
 #ifdef _DEBUG
 	EventDebug debug2(&consoleUI2);
 	debug2.setGlobalEvent(true);
@@ -216,6 +240,19 @@ void main(int argc, char** argv)
 	debug2.setPosition(0, 0);
 	consoleUI2.addEvent(&debug2);
 #endif
+
+	ConsolePlane aPlaneTip2(&consoleUI2);
+	aPlaneTip2.setHasBorder(true);
+	aPlaneTip2.setTextColor(red);
+	aPlaneTip2.setBkColor(yellow);
+	CONSOLE_SCREEN_BUFFER_INFO csbi = consoleUI2.getConsoleScreenInfo();
+	Rect rectAPlaneTip2;
+	rectAPlaneTip2.X = 2;
+	rectAPlaneTip2.Y = 1;
+	rectAPlaneTip2.nWidth = csbi.dwSize.X - rectAPlaneTip2.X*2;
+	rectAPlaneTip2.nHeight = csbi.srWindow.Bottom - csbi.srWindow.Top - rectAPlaneTip2.Y*2;
+	consoleUI2.setControlRect(&aPlaneTip2, rectAPlaneTip2);
+	consoleUI2.addControl(&aPlaneTip2, false);
 
 	std::function<void(void)> onTestClick2 = [&](void) -> void {
 		consoleUI2.endLoopEvent();
@@ -236,6 +273,7 @@ void main(int argc, char** argv)
 	bool b = true;
 	for ( ; true; b = !b)
 	{
+		//用redraw和startLoopEvent启动新界面
 		if (b)
 		{
 			consoleUI.redraw();

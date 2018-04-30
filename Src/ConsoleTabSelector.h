@@ -119,6 +119,10 @@ protected:
 		{
 			if (!input_record.Event.KeyEvent.bKeyDown)
 			{
+				if (input_record.Event.KeyEvent.wVirtualKeyCode == 18)
+				{//·Å¿ªalt¼ü
+					exitShowTab();
+				}
 				return;
 			}
 

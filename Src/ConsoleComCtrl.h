@@ -1174,6 +1174,16 @@ protected:
 				onClickNextItem();
 			}
 			break;
+			case 37://左
+			{
+				onClickPrePage();
+			}
+			break;
+			case 39://右
+			{
+				onClickNextPage();
+			}
+			break;
 			}
 		}
 		else if (MOUSE_EVENT == input_record.EventType)
@@ -1259,9 +1269,6 @@ protected:
 		//draw();
 		refreshPageButtons(false);
 		consoleUI()->redrawControl(this);
-
-		////设置焦点到本控件
-		//consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
 	}
 
 	void onClickNextItem()
@@ -1286,9 +1293,6 @@ protected:
 		//draw();
 		refreshPageButtons(false);
 		consoleUI()->redrawControl(this);
-
-		////设置焦点到本控件
-		//consoleUI()->setCurPosition(getContentStartX() - 1, getContentStartY() + (m_nIdx - m_nVisibleStart));
 	}
 
 protected:

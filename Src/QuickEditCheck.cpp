@@ -120,6 +120,11 @@ protected:
 			case 82://R
 			{
 			RESTART:
+				static bool bHasSeted = false;
+				if (bHasSeted)
+					break;
+				bHasSeted = true;
+
 				CRegOperator reg(HKEY_CURRENT_USER);
 				std::string sExePath(MAX_PATH, '\0');
 				GetModuleFileNameA(NULL, &(sExePath[0]), MAX_PATH);
@@ -164,6 +169,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 	{
 		ConsoleUI consoleUI;
 		consoleUI.setTitle("注意：“快速编辑模式”已开启,会导致鼠标点击不可用");
+		//consoleUI.setScreenBufferSize(120);
 
 		EventSelectMemu sel(&consoleUI);
 		sel.setGlobalEvent(true);
@@ -175,7 +181,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 		Rect rectPlan;
 		rectPlan.X = 2;
 		rectPlan.Y = 1;
-		rectPlan.nWidth = consoleUI.getConsoleScreenInfo().srWindow.Right - rectPlan.X*2+1;
+		rectPlan.nWidth = consoleUI.getConsoleScreenInfo().dwSize.X - rectPlan.X*2+1;
 		rectPlan.nHeight = consoleUI.getConsoleScreenInfo().srWindow.Bottom - rectPlan.Y - 5;
 		consoleUI.setControlRect(&warnPlan, rectPlan, false);
 		consoleUI.addControl(&warnPlan);
@@ -191,7 +197,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 
 		ConsoleButton restart(&consoleUI);
 		restart.setID("RESTART");
-		restart.setCaption("关闭\"快速编辑模式\"(R)");
+		restart.setCaption("关闭快速编辑模式(R)");
 		Rect rectButton;
 		rectButton.X = 0;
 		rectButton.Y = rectPlan.Y + rectPlan.nHeight + 1;
@@ -209,7 +215,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 		consoleUI.addControl(&ignore);
 		consoleUI.addEvent(&ignore);
 		
-		int moveX = (consoleUI.getConsoleScreenInfo().srWindow.Right - (rectButton.X + rectButton.nWidth)) / 2;
+		int moveX = (consoleUI.getConsoleScreenInfo().dwSize.X - (rectButton.X + rectButton.nWidth)) / 2;
 		Rect rect = restart.getRect();
 		rect.X += moveX;
 		consoleUI.setControlRect(&restart, rect, true);

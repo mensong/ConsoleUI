@@ -113,6 +113,8 @@ public:
 		, m_dwSpTime(500)
 	{
 		setConsoleUI(consoleUI);
+
+		setGlobalEvent(true);
 	}
 	
 protected:
@@ -216,22 +218,28 @@ protected:
 			sTxt += " VSCode:";
 			sTxt += std::to_string(input_record.Event.KeyEvent.wVirtualScanCode);
 			consoleUI()->drawText(x, y++, sTxt.c_str());
-			sTxt = " IsUnicode:";
-			sTxt += (input_record.Event.KeyEvent.uChar.AsciiChar == input_record.Event.KeyEvent.uChar.UnicodeChar) ? "false" : "true";
-			sTxt += " Char:";
-			if (input_record.Event.KeyEvent.uChar.AsciiChar == input_record.Event.KeyEvent.uChar.UnicodeChar)
+
+			static std::string sTxtOld;
+			if (input_record.Event.KeyEvent.bKeyDown)
 			{
-				sTxt += input_record.Event.KeyEvent.uChar.AsciiChar;
+				sTxt = " IsUnicode:";
+				sTxt += (input_record.Event.KeyEvent.uChar.AsciiChar == input_record.Event.KeyEvent.uChar.UnicodeChar) ? "false" : "true";
+				sTxt += " Char:";
+				if (input_record.Event.KeyEvent.uChar.AsciiChar == input_record.Event.KeyEvent.uChar.UnicodeChar)
+				{
+					sTxt += input_record.Event.KeyEvent.uChar.AsciiChar;
+				}
+				else
+				{
+					WCHAR c[2];
+					wsprintfW(c, L"%c", input_record.Event.KeyEvent.uChar.UnicodeChar);
+					std::string ss;
+					GL::WideByte2Ansi(ss, c);
+					sTxt += ss;
+				}
+				sTxtOld = sTxt;
 			}
-			else
-			{
-				WCHAR c[2];
-				wsprintfW(c, L"%c", input_record.Event.KeyEvent.uChar.UnicodeChar);
-				std::string ss;
-				GL::WideByte2Ansi(ss, c);
-				sTxt += ss;
-			}
-			consoleUI()->drawText(x, y++, sTxt.c_str());
+			consoleUI()->drawText(x, y++, sTxtOld.c_str());
 		}
 		else
 		{

@@ -1,6 +1,6 @@
 #include "string_utility.h"
 
-namespace GL
+namespace GL 
 {
 
 bool ZH_isZHChar(char c)

@@ -1,6 +1,7 @@
 #include "ConsoleComEvent.h"
 #include "ConsoleComCtrl.h"
 #include "QuickEditCheck.h"
+#include "ConsoleTabSelector.h"
 
 using namespace GL;
 
@@ -42,12 +43,17 @@ void main(int argc, char** argv)
 	ConsoleUI consoleUI/*(GL::COLOR::dark_cyan)*/;
 	consoleUI.setTitle("Console UI ÑÝÊ¾");
 
-	//EventMouseFollow mev(&consoleUI);
-	//consoleUI.addEvent(&mev);
 	EventResizeWindow rw(&consoleUI);
 	consoleUI.addEvent(&rw);
-	EventTabSelect ts(&consoleUI);
+	ConsoleTabSelector ts(&consoleUI);
 	consoleUI.addEvent(&ts);
+#ifdef _DEBUG
+	EventDebug debug(&consoleUI);
+	debug.setGlobalEvent(true);
+	debug.setEvent(KEY_EVENT | MOUSE_EVENT);
+	debug.setPosition(65, 13);
+	consoleUI.addEvent(&debug);
+#endif
 
 	ConsolePlane titlePlane(&consoleUI);
 	Rect rectTitle;
@@ -163,7 +169,6 @@ void main(int argc, char** argv)
 	rb2.setSelectable(true);
 	consoleUI.addControl(&rb2);
 	consoleUI.addEvent(&rb2);
-	rb2.setGroup(&rbg);
 	rbg.addRadioBox(&rb2);
 	ConsoleRadioBox rb3(&consoleUI);
 	rb3.setPosition(65, 11);
@@ -180,8 +185,66 @@ void main(int argc, char** argv)
 	rb4.setSelectable(true);
 	consoleUI.addControl(&rb4);
 	consoleUI.addEvent(&rb4);
-	rb4.setGroup(&rbg);
 	rbg.addRadioBox(&rb4);
-	
-	consoleUI.loopEvent();
+
+	std::function<void(void)> onTestClick = [&](void) -> void {
+		consoleUI.endLoopEvent();
+	};
+	ConsoleButton btEnd(&consoleUI);
+	btEnd.setCaption("ÇÐ»»");
+	btEnd.setSelectable(true);
+	Rect rectEnd;
+	rectEnd.nWidth = 8;
+	rectEnd.nHeight = 1;
+	rectEnd.X = 110;
+	rectEnd.Y = 3;
+	consoleUI.setControlRect(&btEnd, rectEnd, false);
+	btEnd.setClickedEvent(onTestClick);
+	consoleUI.addEvent(&btEnd);
+	consoleUI.addControl(&btEnd);
+
+
+	ConsoleUI consoleUI2/*(GL::COLOR::dark_cyan)*/;
+	consoleUI2.setTitle("Console UI ÑÝÊ¾");
+
+	EventMouseFollow mev2(&consoleUI2);
+	consoleUI2.addEvent(&mev2);
+#ifdef _DEBUG
+	EventDebug debug2(&consoleUI2);
+	debug2.setGlobalEvent(true);
+	debug2.setEvent(KEY_EVENT | MOUSE_EVENT);
+	debug2.setPosition(0, 0);
+	consoleUI2.addEvent(&debug2);
+#endif
+
+	std::function<void(void)> onTestClick2 = [&](void) -> void {
+		consoleUI2.endLoopEvent();
+	};
+	ConsoleButton btEnd2(&consoleUI2);
+	btEnd2.setCaption("ÇÐ»»");
+	btEnd2.setSelectable(true);
+	Rect rectEnd2;
+	rectEnd2.nWidth = 8;
+	rectEnd2.nHeight = 1;
+	rectEnd2.X = 110;
+	rectEnd2.Y = 1;
+	consoleUI2.setControlRect(&btEnd2, rectEnd2, false);
+	btEnd2.setClickedEvent(onTestClick2);
+	consoleUI2.addEvent(&btEnd2);
+	consoleUI2.addControl(&btEnd2);
+
+	bool b = true;
+	for ( ; true; b = !b)
+	{
+		if (b)
+		{
+			consoleUI.redraw();
+			consoleUI.startLoopEvent();
+		}
+		else
+		{
+			consoleUI2.redraw();
+			consoleUI2.startLoopEvent();
+		}
+	}
 }

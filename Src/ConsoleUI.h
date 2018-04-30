@@ -1,17 +1,18 @@
 
 #ifndef  CONSOLEAPP_H 
 #define CONSOLEAPP_H 
-
-#define NS_START｛ namespace GL{
-#define ｝NS_END }
-
 #include <windows.h>
 #include <conio.h>
 #include <vector>
 #include <map>
 #include <time.h>
-#include "RTreeEx.h"
 #include <locale.h>
+#include <Convertor.h>
+#include <string>
+#include "RTreeEx.h"
+
+#define NS_START｛ namespace GL{
+#define ｝NS_END }
 
 NS_START｛
 
@@ -396,6 +397,7 @@ public:
 			m_Style = style_default;
 
 		clearScreen(m_textColor, m_bkColor, m_Style);
+
 	}
 
 	~ConsoleUI() {}
@@ -715,71 +717,28 @@ public:
 	//*****************************************************************************
 	//*                                                                           *
 	//*****************************************************************************
-	void box(unsigned x, unsigned y, unsigned sx, unsigned sy, unsigned char col, unsigned char col2, char text_[])
-	{
-		unsigned i, j, m;
-
-		m = (sx - x);                       //differential
-		j = m / 8;                          //adjust
-		j = j - 1;                          //more adjustment
-		setCurPosition(x, y); _cprintf(" ");       //Top left corner of box
-		setCurPosition(sx, y); _cprintf(" ");      //Top right corner of box
-		setCurPosition(x, sy); _cprintf(" ");      //Bottom left corner of box
-		setCurPosition(sx, sy); _cprintf(" ");     //Bottom right corner of box
-
-		for (i = x + 1; i < sx; i++)
-		{
-			setCurPosition(i, y); _cprintf(" ");     // Top horizontol line
-			setCurPosition(i, sy); _cprintf(" ");    // Bottom Horizontal line
-		}
-
-		for (i = y + 1; i < sy; i++)
-		{
-			setCurPosition(x, i); _cprintf(" ");     //Left Vertical line
-			setCurPosition(sx, i); _cprintf(" ");    //Right Vertical Line
-		}
-
-		setCurPosition(x + j, y); _cprintf(text_); //put Title
-		setCurPosition(1, 24);
-	}
-
-	//*****************************************************************************
-	//*                                                                           *
-	//*****************************************************************************
 	void createBox(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
 		COLOR textCol, COLOR bkcol, STYLE style = style_default)
 	{
-		////mark old
-		//COLOR textColorOld, bkColorOld;
-		//STYLE styleOld;
-		//getColor(textColorOld, bkColorOld);
-		//getStyle(styleOld);
-
 		int x, y;
 		setCurColor(textCol, bkcol);                       //Set to color bkcol
 		setCurStyle(style);
 
-		for (y = y1; y < y2; y++)                    //Fill Y Region Loop
+		//for (y = y1; y < y2; y++)                    //Fill Y Region Loop
+		//{
+		//	for (x = x1; x < x2; x++)               //Fill X region Loop
+		//	{
+		//		setCurPosition(x, y); _cprintf(" ");       //Draw Solid space
+		//	}
+		//}
+
+		std::string sSpaces(x2 - x1, ' ');
+
+		for (y = y1; y < y2; ++y)
 		{
-			for (x = x1; x < x2; x++)               //Fill X region Loop
-			{
-				setCurPosition(x, y); _cprintf(" ");       //Draw Solid space
-			}
+			setCurPosition(x1, y);
+			_cprintf(sSpaces.c_str());
 		}
-
-		////reset old
-		//setColor(textColorOld, bkColorOld);
-		//setStyle(styleOld);
-	}
-
-	//*****************************************************************************
-	//*                                                                           *
-	//*****************************************************************************
-	void redrawBox(unsigned x, unsigned y, unsigned sx, unsigned sy,
-		unsigned char col, unsigned char col2, char text_[], COLOR textCol, COLOR bkcol, STYLE attri = style_default)
-	{
-		createBox(x, y, sx, sy, textCol, bkcol, attri);
-		box(x, y, sx, sy, col, col2, text_);
 	}
 
 	void createBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
@@ -907,6 +866,7 @@ public:
 		}
 	}
 
+	//里面没有内容
 	void createBoxWithBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
 		COLOR textColor, COLOR boxColor, STYLE style = style_default)
 	{
@@ -915,102 +875,8 @@ public:
 			return;
 		}
 
-		--x2;
-		--y2;
-
-		COORD pt;
-		if (x1 == x2)
-		{
-			pt.X = x1;
-			pt.Y = y1;
-			if (y1 == y2)
-			{//只画一点
-				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor,
-					(STYLE)(common_lvb_grid_horizontal | common_lvb_underscore | common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-				return;
-			}
-
-			//第一行
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_horizontal | common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-			//中间的行
-			for (int i = 1; i < y2 - y1; ++i)
-			{
-				++pt.Y;
-				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-			}
-			//最下行
-			++pt.Y;
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_underscore | common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-			return;
-		}
-		else if (y1 == y2)
-		{
-			pt.X = x1;
-			pt.Y = y1;
-
-			//到此没有x1==x2了
-
-			//第一列
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor,
-				(STYLE)(common_lvb_grid_horizontal | common_lvb_underscore | common_lvb_grid_lvertical));
-			//中间的列
-			for (int i = 1; i < x2 - x1; ++i)
-			{
-				++pt.X;
-				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_horizontal | common_lvb_underscore));
-			}
-			//最后一列
-			++pt.X;
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor,
-				(STYLE)(common_lvb_grid_horizontal | common_lvb_underscore | common_lvb_grid_rvertical));
-			return;
-		}
-		else /* 行数与列数都不为1 */
-		{
-			pt.X = x1;
-			pt.Y = y1;
-
-			//第一行
-			//  第一行的第一列格子
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_horizontal | common_lvb_grid_lvertical));
-			//  第一行的中间列格子
-			++pt.X;
-			fillColorAndStyle(pt.X, pt.Y, x2 - x1 - 1, textColor, boxColor, (STYLE)(common_lvb_grid_horizontal));
-			//  第一行最后列的格子
-			pt.X = x2;
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_horizontal | common_lvb_grid_rvertical));
-
-			//中间行的格子
-			for (int i = 1; i < y2 - y1; ++i)
-			{
-				pt.X = x1;
-				++pt.Y;
-
-				//  第一列格子
-				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_lvertical));
-
-				//  中间列格子
-				++pt.X;
-				fillColorAndStyle(pt.X, pt.Y, x2 - x1 - 1, textColor, boxColor, style);
-
-				//  最后列的格子
-				pt.X = x2;
-				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_grid_rvertical));
-
-			}
-
-			//最后行的格子
-			pt.X = x1;
-			++pt.Y;
-			//  最后一行的第一列格子
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_underscore | common_lvb_grid_lvertical));
-			//  最后一行的中间列格子
-			++pt.X;
-			fillColorAndStyle(pt.X, pt.Y, x2 - x1 - 1, textColor, boxColor, (STYLE)(common_lvb_underscore));
-			//  最后一行最后列的格子
-			pt.X = x2;
-			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(common_lvb_underscore | common_lvb_grid_rvertical));
-		}
+		createBox(x1, y1, x2, y2, textColor, boxColor, style);
+		createBorder(x1, y1, x2, y2);
 	}
 
 
@@ -1421,8 +1287,9 @@ public:
 	//*****************************************************************************
 	//*                                                                           *
 	//*****************************************************************************
-	void loopEvent()
+	void startLoopEvent()
 	{
+		m_loop = true;
 		//init
 		Event::INPUT_MODE oldMode = 0;
 		GetConsoleMode(m_hIn, &oldMode);
@@ -1443,6 +1310,7 @@ public:
 		EVENT_MAP::iterator itEnd = m_mapEvents.end();
 		for (; m_loop; )
 		{
+			//使用ReadConsoleInputA时不能获得中文，所有这里不使用ReadConsoleInput
 			if (ReadConsoleInputW(m_hIn, &input_record, 1, &events) == FALSE)
 			{
 				continue;
@@ -1463,7 +1331,6 @@ public:
 					continue;
 
 				bool bExe = false;
-
 				if (pEvent->isGlobalEvent())
 				{//如果是全局事件，则无论如何都执行
 					bExe = true;
@@ -1522,7 +1389,7 @@ public:
 		}
 	}
 
-	void destory()
+	void endLoopEvent()
 	{
 		m_loop = false;
 	}
@@ -1572,7 +1439,7 @@ private:
 	std::vector<COORD> m_stackPostion;
 };
 
-//Selectable Console
+//Selectable Control
 class ControlSelectable
 	: public Control
 {

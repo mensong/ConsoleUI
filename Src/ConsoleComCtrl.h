@@ -821,14 +821,50 @@ class ConsoleListBox
 	, public Control
 {
 public:
+	class ListBoxButton
+		: public ConsoleButton
+	{
+	public:
+		ListBoxButton(ConsoleUI *consoleUI, ConsoleListBox* pListBox)
+			: ConsoleButton(consoleUI)
+			, m_pListBox(pListBox)
+		{
+
+		}
+	protected:
+		virtual EVENT_TYPE eventType()
+		{
+			return ConsoleButton::eventType() | KEY_EVENT;
+		}
+
+		//on event
+		virtual void onEvent(INPUT_RECORD &input_record)
+		{
+			if (KEY_EVENT == input_record.EventType)
+			{
+				//在按钮激活的情况下也能按上下键切换列表item
+				if (m_pListBox)
+					m_pListBox->onEvent(input_record);
+			}
+			else
+			{
+				ConsoleButton::onEvent(input_record);
+			}
+		}
+
+	private:
+		ConsoleListBox* m_pListBox;
+	};
+
+public:
 	ConsoleListBox(ConsoleUI *consoleUI = NULL)
 		: m_nIdx(5)
 		, m_nVisibleStart(3)
 		, borderWidth(1)
-		, m_btPrePage(consoleUI)
-		, m_btNextPage(consoleUI)
-		, m_btPreItem(consoleUI)
-		, m_btNextItem(consoleUI)
+		, m_btPrePage(consoleUI, this)
+		, m_btNextPage(consoleUI, this)
+		, m_btPreItem(consoleUI, this)
+		, m_btNextItem(consoleUI, this)
 	{
 		setConsoleUI(consoleUI);
 
@@ -1301,11 +1337,11 @@ private:
 
 	int borderWidth;
 
-	ConsoleButton m_btPrePage;
-	ConsoleButton m_btNextPage;
+	ListBoxButton m_btPrePage;
+	ListBoxButton m_btNextPage;
 
-	ConsoleButton m_btPreItem;
-	ConsoleButton m_btNextItem;
+	ListBoxButton m_btPreItem;
+	ListBoxButton m_btNextItem;
 };
 
 //Console Input Box
@@ -1562,18 +1598,15 @@ protected:
 					consoleUI()->setCurPosition(rect().X + rect().nWidth - 1, curPt.Y);
 					break;
 				}
-				case 67://Ctrl + c
-				{
-
-					break;
-				}
-				case 86://Ctrl + v
-				{
-
-					break;
-				}
 				default:
 				{//输入字符到输入框
+					if ((input_record.Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+						|| (input_record.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+						)
+					{
+						break;
+					}
+
 					COORD curPt = consoleUI()->getCurPosition();
 					if (input_record.Event.KeyEvent.uChar.AsciiChar == input_record.Event.KeyEvent.uChar.UnicodeChar)
 					{//ansi
@@ -1629,106 +1662,6 @@ protected:
 
 private:
 	std::string m_content;
-};
-
-//Tab select
-class EventTabSelect
-	: public Event
-{
-public:
-	EventTabSelect(ConsoleUI *consoleUI = NULL)
-		: m_nSelectedLayerId(-1)
-		, m_pCurSelCtrl(NULL)
-	{
-		setConsoleUI(consoleUI);
-
-		setGlobalEvent(true);
-	}
-
-	//获得可选择控件，如果nStartLayerId不是ControlSelectable，则向下找，如果到尾则回到首部开始向下找
-	ControlSelectable* getSelectableControl(int nStartLayerId)
-	{
-		int nCtrlCount = consoleUI()->getControls().size();
-		for (int i = 0; i < nCtrlCount; ++i)
-		{
-			ControlSelectable* pCtrl = dynamic_cast<ControlSelectable*>(consoleUI()->getControls()[(nStartLayerId + i) % nCtrlCount]);
-			if (pCtrl != NULL && pCtrl->isVisible() && pCtrl->isEnable() && pCtrl->isSelectable())
-				return pCtrl;
-		}
-
-		return NULL;
-	}
-
-protected:
-	virtual EVENT_TYPE eventType()
-	{
-		return KEY_EVENT;
-	}
-
-	virtual void onEvent(INPUT_RECORD &input_record)
-	{
-		if (KEY_EVENT == input_record.EventType)
-		{
-			if (!input_record.Event.KeyEvent.bKeyDown)
-			{
-				return;
-			}
-
-			//check cur idx
-			Control* pActiveCtrl = consoleUI()->getActiveControl();
-			if (pActiveCtrl != NULL)
-			{
-				m_nSelectedLayerId = consoleUI()->getControlLayerId(pActiveCtrl);
-			}
-
-			COORD curPt = consoleUI()->getCurPosition();
-
-			WORD k = (input_record.Event.KeyEvent.wVirtualKeyCode);
-			switch (k)
-			{
-			case 9://tab
-			{
-				ControlSelectable* pCtrlNext = getSelectableControl(++m_nSelectedLayerId);
-				if (NULL != pCtrlNext)
-				{
-					consoleUI()->setCurPosition(pCtrlNext->rect().X, pCtrlNext->rect().Y);
-					//consoleUI()->redrawControl(pCtrlNext);
-					pCtrlNext->draw();
-
-					if (NULL != m_pCurSelCtrl)
-					{
-						//consoleUI()->redrawControl(m_pCurSelCtrl);
-						m_pCurSelCtrl->draw();
-					}
-
-					m_pCurSelCtrl = pCtrlNext;
-				}
-				break;
-			}
-			case 13://回车
-			{
-				Control* pActiveCtrl = consoleUI()->getActiveControl();
-				ConsoleButton* pButton = NULL;
-				ConsoleCheckBox* pCheckBox = NULL;
-				if (NULL != (pButton = dynamic_cast<ConsoleButton*>(pActiveCtrl)))
-				{
-					pButton->onClicked();
-				}
-				else if (NULL != (pCheckBox = dynamic_cast<ConsoleCheckBox*>(pActiveCtrl)))
-				{
-					pCheckBox->setCheck(!pCheckBox->isChecked());
-					pCheckBox->onCheck();
-					consoleUI()->redrawControl(pCheckBox);
-				}
-				break;
-			}
-			}
-		}
-	}
-
-private:
-	int m_nSelectedLayerId;
-	ControlSelectable* m_pCurSelCtrl;
 };
 
 ｝NS_END

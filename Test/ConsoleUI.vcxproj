@@ -29,7 +29,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -42,7 +42,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="..\conv\Convertor.h" />
     <ClInclude Include="..\conv\iconv.h" />
+    <ClInclude Include="..\Src\ConsoleTabSelector.h" />
     <ClInclude Include="..\Src\ConsoleUI.h" />
     <ClInclude Include="..\Src\ConsoleComCtrl.h" />
     <ClInclude Include="..\Src\ConsoleComEvent.h" />

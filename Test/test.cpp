@@ -38,11 +38,11 @@ protected:
 
 void main(int argc, char** argv)
 {
-	//检测是否开启开速编辑模式，如果开始了，则会导致鼠标点击无效
+	//检测是否开启开速编辑模式，如果开启了，则会导致鼠标点击无效
 	QuickEditCheck qec;	
 
-	//新建一个控制台界面
-	ConsoleUI consoleUI/*(GL::COLOR::dark_cyan)*/;
+	///////////////////第1个控制台界面////////////////
+	ConsoleUI consoleUI(GL::COLOR::dark_cyan);
 	consoleUI.setTitle("Console UI 演示");
 	consoleUI.setScreenBufferSize(120);
 
@@ -175,6 +175,7 @@ void main(int argc, char** argv)
 	rb1.setPosition(65, 10);
 	rb1.setAutoWidth(true);
 	rb1.setContent("请选择我吧1");
+	rb1.setTransparent(true);//透明
 	rb1.setSelectable(true);
 	consoleUI.addControl(&rb1);
 	consoleUI.addEvent(&rb1);
@@ -223,7 +224,51 @@ void main(int argc, char** argv)
 	consoleUI.addEvent(&btEnd);
 	consoleUI.addControl(&btEnd);
 
-	//第2个控制台界面
+	ConsoleProgressBar prog(&consoleUI);
+	prog.setMaxRange(10);
+	prog.setCompleted(0);
+	Rect rectProg;
+	rectProg.X = 65;
+	rectProg.Y = 20;
+	rectProg.nWidth = 10;
+	rectProg.nHeight = 1;
+	consoleUI.setControlRect(&prog, rectProg);
+	consoleUI.addControl(&prog);
+
+	std::function<void(void)> onChangeProgClick = [&](void) -> void {
+		static bool bP = true;
+		if (bP)
+		{
+			if (!(prog++))
+			{
+				prog--;
+				bP = false;
+			}
+		}
+		else
+		{
+			if (!(prog--))
+			{
+				prog++;
+				bP = true;
+			}
+		}
+	};
+	ConsoleButton btChangeProg(&consoleUI);
+	btChangeProg.setCaption("+/-");
+	btChangeProg.setSelectable(true);
+	Rect rectChangeProg;
+	rectChangeProg.nWidth = 5;
+	rectChangeProg.nHeight = 1;
+	rectChangeProg.X = 76;
+	rectChangeProg.Y = 20;
+	consoleUI.setControlRect(&btChangeProg, rectChangeProg, false);
+	btChangeProg.setClickedEvent(onChangeProgClick);
+	consoleUI.addEvent(&btChangeProg);
+	consoleUI.addControl(&btChangeProg);
+
+
+	///////////////////第2个控制台界面////////////////
 	ConsoleUI consoleUI2/*(GL::COLOR::dark_cyan)*/;
 	consoleUI2.setTitle("Console UI 演示");
 
@@ -232,7 +277,7 @@ void main(int argc, char** argv)
 	EventResizeWindow rw2(&consoleUI2);
 	consoleUI2.addEvent(&rw2);
 	ConsoleTabSelector ts2(&consoleUI2);
-	consoleUI.addEvent(&ts2);
+	consoleUI2.addEvent(&ts2);
 #ifdef _DEBUG
 	EventDebug debug2(&consoleUI2);
 	debug2.setGlobalEvent(true);
@@ -260,6 +305,8 @@ void main(int argc, char** argv)
 	ConsoleButton btEnd2(&consoleUI2);
 	btEnd2.setCaption("切换");
 	btEnd2.setSelectable(true);
+	btEnd2.setBkColor(green);
+	btEnd2.setTextColor(red);
 	Rect rectEnd2;
 	rectEnd2.nWidth = 8;
 	rectEnd2.nHeight = 1;
@@ -270,6 +317,9 @@ void main(int argc, char** argv)
 	consoleUI2.addEvent(&btEnd2);
 	consoleUI2.addControl(&btEnd2);
 
+
+
+	///////////////////////Loop event////////////////////
 	bool b = true;
 	for ( ; true; b = !b)
 	{

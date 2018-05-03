@@ -731,9 +731,12 @@ public:
 	//*****************************************************************************
 	//*                                                                           *
 	//*****************************************************************************
-	void createBox(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
+	bool createBox(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
 		COLOR textCol, COLOR bkcol, STYLE style = style_default)
 	{
+		if (x1 >= x2 || y1 >= y2)
+			return false;
+
 		int x, y;
 		setCurColor(textCol, bkcol);                       //Set to color bkcol
 		setCurStyle(style);
@@ -753,13 +756,15 @@ public:
 			setCurPosition(x1, y);
 			_cprintf(sSpaces.c_str());
 		}
+
+		return true;
 	}
 
-	void createBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
+	bool createBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
 	{
 		if (x1 >= x2 || y1 >= y2)
 		{
-			return;
+			return false;
 		}
 
 		--x2;
@@ -779,7 +784,7 @@ public:
 				getColorAndStyleByPoint(pt.X, pt.Y, textColor, boxColor, style);
 				fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor,
 					(STYLE)(style | common_lvb_grid_horizontal | common_lvb_underscore | common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-				return;
+				return true;
 			}
 
 			//第一行
@@ -796,7 +801,7 @@ public:
 			++pt.Y;
 			getColorAndStyleByPoint(pt.X, pt.Y, textColor, boxColor, style);
 			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(style | common_lvb_underscore | common_lvb_grid_lvertical | common_lvb_grid_rvertical));
-			return;
+			return true;
 		}
 		else if (y1 == y2)
 		{
@@ -821,7 +826,7 @@ public:
 			getColorAndStyleByPoint(pt.X, pt.Y, textColor, boxColor, style);
 			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor,
 				(STYLE)(style | common_lvb_grid_horizontal | common_lvb_underscore | common_lvb_grid_rvertical));
-			return;
+			return true;
 		}
 		else /* 行数与列数都不为1 */
 		{
@@ -878,19 +883,23 @@ public:
 			getColorAndStyleByPoint(pt.X, pt.Y, textColor, boxColor, style);
 			fillColorAndStyle(pt.X, pt.Y, 1, textColor, boxColor, (STYLE)(style | common_lvb_underscore | common_lvb_grid_rvertical));
 		}
+
+		return true;
 	}
 
 	//里面没有内容
-	void createBoxWithBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
+	bool createBoxWithBorder(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,
 		COLOR textColor, COLOR boxColor, STYLE style = style_default)
 	{
 		if (x1 >= x2 || y1 >= y2)
 		{
-			return;
+			return false;
 		}
 
 		createBox(x1, y1, x2, y2, textColor, boxColor, style);
 		createBorder(x1, y1, x2, y2);
+
+		return true;
 	}
 
 

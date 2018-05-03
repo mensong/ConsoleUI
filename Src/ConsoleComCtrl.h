@@ -1668,4 +1668,137 @@ private:
 	std::string m_content;
 };
 
+//Console Progress bar
+class ConsoleProgressBar
+	: public Control
+{
+public:
+	ConsoleProgressBar(ConsoleUI *consoleUI = NULL)
+		: m_nCompleted(0)
+		, m_nMax(0)
+		, m_nStep(1)
+	{
+		setConsoleUI(consoleUI);
+
+		m_textColor = yellow;
+		m_bkColor = red;
+	}
+
+	virtual bool draw()
+	{
+		bool bRet = false;
+		consoleUI()->pushPosition();
+		do {
+			if (!Control::draw())
+				break;
+
+			COLOR textColor = getTextColor();
+			COLOR bkColor = getBkColor();
+			STYLE style = getStyle();
+
+			//draw context
+			int nCompletedX = (m_nCompleted * rect().nWidth) / (m_nMax==0 ? rect().nWidth : m_nMax);
+			consoleUI()->createBox(rect().X, rect().Y, rect().X + nCompletedX, rect().Y + rect().nHeight, textColor, bkColor, style);
+			consoleUI()->createBox(rect().X + nCompletedX, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight,
+				m_colorRemain.getTextColor(), m_colorRemain.getBkColor(), m_colorRemain.getStyle());
+			//draw border
+			consoleUI()->createBorder(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight);
+
+			bRet = true;
+		} while (0);
+		consoleUI()->popPosition();
+
+		return bRet;
+	}
+
+	void setMaxRange(int nMax)
+	{
+		m_nMax = nMax;
+	}
+	int getMaxRange()
+	{
+		return m_nMax;
+	}
+
+	void setCompleted(int n)
+	{
+		if (n > m_nMax)
+			n = m_nMax;
+		else if (n < 0)
+			n = 0;
+		m_nCompleted = n;
+	}
+	int getCompleted()
+	{
+		return m_nCompleted;
+	}
+
+	void setStep(int n)
+	{
+		m_nStep = n;
+	}
+	int getStep()
+	{
+		return m_nStep;
+	}
+
+
+	bool forward()
+	{
+		bool bRet = false;
+		if (m_nCompleted < m_nMax)
+		{
+			++m_nCompleted;
+			bRet = true;
+		}
+
+		draw();
+
+		return bRet;
+	}
+
+	bool backward()
+	{
+		bool bRet = false;
+		if (m_nCompleted > 0)
+		{
+			--m_nCompleted;
+			bRet = true;
+		}
+
+		draw();
+
+		return bRet;
+	}
+
+	bool operator++(int i)
+	{
+		return forward();
+	}
+
+	bool operator--(int i)
+	{
+		return backward();
+	}
+
+	int operator+(int i)
+	{
+		setCompleted(getCompleted()+1);
+		return getCompleted();
+	}
+
+	bool operator-(int i)
+	{
+		setCompleted(getCompleted() - 1);
+		return getCompleted();
+	}
+
+private:
+	int m_nCompleted;
+	int m_nMax;
+	int m_nStep;
+
+	ConsoleColor m_colorRemain;
+};
+
 £ýNS_END

@@ -3,7 +3,7 @@
 class QuickEditCheck
 {
 public:
-	QuickEditCheck(bool requireRestart=false);
+	QuickEditCheck(bool requireRestart = false);
 	~QuickEditCheck();
 
 protected:

@@ -146,16 +146,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\conv\Convertor.cpp" />
-    <ClCompile Include="..\conv\win_iconv.c" />
+    <ClCompile Include="..\Src\ConsoleComCtrl.cpp" />
+    <ClCompile Include="..\Src\ConsoleComEvent.cpp" />
+    <ClCompile Include="..\Src\ConsoleTabSelector.cpp" />
+    <ClCompile Include="..\Src\ConsoleUI.cpp" />
     <ClCompile Include="..\Src\QuickEditCheck.cpp" />
     <ClCompile Include="..\Src\RegOperator.cpp" />
     <ClCompile Include="..\Src\string_utility.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\conv\Convertor.h" />
-    <ClInclude Include="..\conv\iconv.h" />
     <ClInclude Include="..\Src\ConsoleTabSelector.h" />
     <ClInclude Include="..\Src\ConsoleUI.h" />
     <ClInclude Include="..\Src\ConsoleComCtrl.h" />

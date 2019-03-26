@@ -16,7 +16,7 @@
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-CRegOperator::CRegOperator( HKEY hKey )
+CRegOperator::CRegOperator(HKEY hKey)
 {
 	m_hKey = hKey;
 }
@@ -46,12 +46,12 @@ CRegOperator::~CRegOperator()
 
 void CRegOperator::Close()
 {
-	if( m_hKey )
+	if (m_hKey)
 	{
 		/* 句柄非空进行关闭 */
-		RegCloseKey( m_hKey );
+		RegCloseKey(m_hKey);
 		m_hKey = NULL;
-	}	
+	}
 }
 
 /*============================================================
@@ -63,55 +63,55 @@ void CRegOperator::Close()
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::SetHKEY(const char* strKey )
+BOOL CRegOperator::SetHKEY(const char* strKey)
 {
-	assert( m_hKey );
-	assert( strKey );
+	assert(m_hKey);
+	assert(strKey);
 
 	/* 逐个进行比较 */
-	if( 0 == strcmp(strKey, ("HKEY_CLASSES_ROOT")) )
+	if (0 == strcmp(strKey, ("HKEY_CLASSES_ROOT")))
 	{
 		m_hKey = HKEY_CLASSES_ROOT;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_CURRENT_USER")) )
+	if (0 == strcmp(strKey, ("HKEY_CURRENT_USER")))
 	{
 		m_hKey = HKEY_CURRENT_USER;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_LOCAL_MACHINE")) )
+	if (0 == strcmp(strKey, ("HKEY_LOCAL_MACHINE")))
 	{
 		m_hKey = HKEY_LOCAL_MACHINE;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_USERS")) )
+	if (0 == strcmp(strKey, ("HKEY_USERS")))
 	{
 		m_hKey = HKEY_USERS;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_PERFORMANCE_DATA")) )
+	if (0 == strcmp(strKey, ("HKEY_PERFORMANCE_DATA")))
 	{
 		m_hKey = HKEY_PERFORMANCE_DATA;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_PERFORMANCE_TEXT")) )
+	if (0 == strcmp(strKey, ("HKEY_PERFORMANCE_TEXT")))
 	{
 		m_hKey = HKEY_PERFORMANCE_TEXT;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_PERFORMANCE_NLSTEXT")) )
+	if (0 == strcmp(strKey, ("HKEY_PERFORMANCE_NLSTEXT")))
 	{
 		m_hKey = HKEY_PERFORMANCE_NLSTEXT;
 		return TRUE;
 	}
 	/* 对操作系统版本进行测试 */
 #if(WINVER >= 0x0400)
-	if( 0 == strcmp(strKey, ("HKEY_CURRENT_CONFIG")) )
+	if (0 == strcmp(strKey, ("HKEY_CURRENT_CONFIG")))
 	{
 		m_hKey = HKEY_CURRENT_CONFIG;
 		return TRUE;
 	}
-	if( 0 == strcmp(strKey, ("HKEY_DYN_DATA")) )
+	if (0 == strcmp(strKey, ("HKEY_DYN_DATA")))
 	{
 		m_hKey = HKEY_DYN_DATA;
 		return TRUE;
@@ -130,19 +130,19 @@ BOOL CRegOperator::SetHKEY(const char* strKey )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::OpenKey(const char* lpSubKey, bool bX64/*=false*/  )
+BOOL CRegOperator::OpenKey(const char* lpSubKey, bool bX64/*=false*/)
 {
-	assert( m_hKey );
-	assert( lpSubKey );
+	assert(m_hKey);
+	assert(lpSubKey);
 
 	DWORD opt = KEY_ALL_ACCESS;
 	if (bX64)
 		opt |= KEY_WOW64_64KEY;
 
 	HKEY hKey;
-	long lReturn = RegOpenKeyExA( m_hKey, lpSubKey, 0L, opt, &hKey );
+	long lReturn = RegOpenKeyExA(m_hKey, lpSubKey, 0L, opt, &hKey);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 成功打开则将打开的句柄保存 */
 		m_hKey = hKey;
@@ -150,7 +150,7 @@ BOOL CRegOperator::OpenKey(const char* lpSubKey, bool bX64/*=false*/  )
 		return TRUE;
 	}
 	/* 打开失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -162,16 +162,16 @@ BOOL CRegOperator::OpenKey(const char* lpSubKey, bool bX64/*=false*/  )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::CreateKey(const char* lpSubKey )
+BOOL CRegOperator::CreateKey(const char* lpSubKey)
 {
-	assert( m_hKey );
-	assert( lpSubKey );
+	assert(m_hKey);
+	assert(lpSubKey);
 
 	HKEY hKey;
 	DWORD dw;
-	long lReturn = RegCreateKeyExA( m_hKey, lpSubKey, 0L, NULL, REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &dw);
+	long lReturn = RegCreateKeyExA(m_hKey, lpSubKey, 0L, NULL, REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &dw);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 成功打开或者创建则将句柄保存 */
 		m_hKey = hKey;
@@ -179,7 +179,7 @@ BOOL CRegOperator::CreateKey(const char* lpSubKey )
 		return TRUE;
 	}
 	/* 打开或者创建失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -191,22 +191,22 @@ BOOL CRegOperator::CreateKey(const char* lpSubKey )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::DeleteKey(const char* lphKey, const char* lpSubKey )
+BOOL CRegOperator::DeleteKey(const char* lphKey, const char* lpSubKey)
 {
-	assert( lphKey );
-	assert( lpSubKey );
-	assert( m_hKey );
+	assert(lphKey);
+	assert(lpSubKey);
+	assert(m_hKey);
 
-	SetHKEY( lphKey );
-	long lReturn = RegDeleteValueA( m_hKey, lpSubKey );
+	SetHKEY(lphKey);
+	long lReturn = RegDeleteValueA(m_hKey, lpSubKey);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 删除成功 */
 		return TRUE;
 	}
 	/* 删除失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -218,20 +218,20 @@ BOOL CRegOperator::DeleteKey(const char* lphKey, const char* lpSubKey )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::DeleteValue(const char* lpValueName )
+BOOL CRegOperator::DeleteValue(const char* lpValueName)
 {
-	assert( m_hKey );
-	assert( lpValueName );
+	assert(m_hKey);
+	assert(lpValueName);
 
-	long lReturn = RegDeleteValueA( m_hKey, lpValueName );
+	long lReturn = RegDeleteValueA(m_hKey, lpValueName);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 删除成功 */
 		return TRUE;
 	}
 	/* 删除失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -243,19 +243,19 @@ BOOL CRegOperator::DeleteValue(const char* lpValueName )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::SaveKey(const char* lpFileName )
+BOOL CRegOperator::SaveKey(const char* lpFileName)
 {
-	assert( m_hKey );
-	assert( lpFileName );
+	assert(m_hKey);
+	assert(lpFileName);
 
-	long lReturn = RegSaveKeyA( m_hKey, lpFileName, NULL );
+	long lReturn = RegSaveKeyA(m_hKey, lpFileName, NULL);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 保存成功 */
 		return TRUE;
 	}
-	/* 保存失败 */	
+	/* 保存失败 */
 	return FALSE;
 }
 
@@ -268,14 +268,14 @@ BOOL CRegOperator::SaveKey(const char* lpFileName )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::RestoreKey(const char* lpFileName )
+BOOL CRegOperator::RestoreKey(const char* lpFileName)
 {
-	assert( m_hKey );
-	assert( lpFileName );
+	assert(m_hKey);
+	assert(lpFileName);
 
-	long lReturn = RegRestoreKeyA( m_hKey, lpFileName, 0);
+	long lReturn = RegRestoreKeyA(m_hKey, lpFileName, 0);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 导入成功 */
 		return TRUE;
@@ -293,19 +293,19 @@ BOOL CRegOperator::RestoreKey(const char* lpFileName )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Read(const char* lpValueName, std::string& outVal )
+BOOL CRegOperator::Read(const char* lpValueName, std::string& outVal)
 {
-	assert( m_hKey );
-	assert( lpValueName );
+	assert(m_hKey);
+	assert(lpValueName);
 
 	DWORD dwType = 0;
 	DWORD dwSize = 2047;
 	char szString[2048];
-	memset( szString, 0, 2048 * sizeof(TCHAR) );
+	memset(szString, 0, 2048 * sizeof(TCHAR));
 
-	long lReturn = RegQueryValueExA( m_hKey, lpValueName, NULL, &dwType, (BYTE *)szString, &dwSize );
+	long lReturn = RegQueryValueExA(m_hKey, lpValueName, NULL, &dwType, (BYTE *)szString, &dwSize);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 查询成功 */
 		outVal = szString;
@@ -313,7 +313,7 @@ BOOL CRegOperator::Read(const char* lpValueName, std::string& outVal )
 		return TRUE;
 	}
 	/* 查询失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -325,17 +325,17 @@ BOOL CRegOperator::Read(const char* lpValueName, std::string& outVal )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Read(const char* lpValueName, DWORD& dwVal )
+BOOL CRegOperator::Read(const char* lpValueName, DWORD& dwVal)
 {
-	assert( m_hKey );
-	assert( lpValueName );
+	assert(m_hKey);
+	assert(lpValueName);
 
 	DWORD dwType;
 	DWORD dwSize = sizeof(DWORD);
 	DWORD dwDest;
-	long lReturn = RegQueryValueExA( m_hKey, lpValueName, NULL, &dwType, (BYTE *)&dwDest, &dwSize );
+	long lReturn = RegQueryValueExA(m_hKey, lpValueName, NULL, &dwType, (BYTE *)&dwDest, &dwSize);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 查询成功 */
 		dwVal = dwDest;
@@ -344,7 +344,7 @@ BOOL CRegOperator::Read(const char* lpValueName, DWORD& dwVal )
 	}
 	DWORD err = GetLastError();
 	/* 查询失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -356,25 +356,25 @@ BOOL CRegOperator::Read(const char* lpValueName, DWORD& dwVal )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Read( const char* lpValueName, int& nVal)
+BOOL CRegOperator::Read(const char* lpValueName, int& nVal)
 {
-	assert( m_hKey );
-	assert( lpValueName );
+	assert(m_hKey);
+	assert(lpValueName);
 
 	DWORD dwType;
-	DWORD dwSize=sizeof(DWORD);
+	DWORD dwSize = sizeof(DWORD);
 	DWORD dwDest;
-	long lReturn = RegQueryValueExA( m_hKey, lpValueName, NULL, &dwType, (BYTE *)&dwDest, &dwSize );
+	long lReturn = RegQueryValueExA(m_hKey, lpValueName, NULL, &dwType, (BYTE *)&dwDest, &dwSize);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 查询成功 */
-		nVal=(int)dwDest;
+		nVal = (int)dwDest;
 
 		return TRUE;
 	}
 
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -386,21 +386,21 @@ BOOL CRegOperator::Read( const char* lpValueName, int& nVal)
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Write(const char* lpValueName, const char* lpValue )
+BOOL CRegOperator::Write(const char* lpValueName, const char* lpValue)
 {
-	assert( m_hKey );
-	assert( lpValueName );
-	assert( lpValue );	
+	assert(m_hKey);
+	assert(lpValueName);
+	assert(lpValue);
 
-	long lReturn = RegSetValueExA( m_hKey, lpValueName, 0L, REG_SZ, (const BYTE *) lpValue, (DWORD)(strlen(lpValue)*sizeof(lpValue[0])) +1 );
+	long lReturn = RegSetValueExA(m_hKey, lpValueName, 0L, REG_SZ, (const BYTE *)lpValue, (DWORD)(strlen(lpValue) * sizeof(lpValue[0])) + 1);
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 成功写入 */
 		return TRUE;
 	}
 	/* 写入失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -412,20 +412,20 @@ BOOL CRegOperator::Write(const char* lpValueName, const char* lpValue )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Write(const char* lpSubKey, DWORD dwVal )
+BOOL CRegOperator::Write(const char* lpSubKey, DWORD dwVal)
 {
-	assert( m_hKey );
-	assert( lpSubKey );
+	assert(m_hKey);
+	assert(lpSubKey);
 
-	long lReturn = RegSetValueExA( m_hKey, lpSubKey, 0L, REG_DWORD, (const BYTE *) &dwVal, sizeof(DWORD) );
+	long lReturn = RegSetValueExA(m_hKey, lpSubKey, 0L, REG_DWORD, (const BYTE *)&dwVal, sizeof(DWORD));
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 成功写入 */
 		return TRUE;
 	}
 	/* 写入失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 /*============================================================
@@ -437,34 +437,34 @@ BOOL CRegOperator::Write(const char* lpSubKey, DWORD dwVal )
 * 作　　者：RainLeaf, 2009年4月10日
 *============================================================*/
 
-BOOL CRegOperator::Write(const char* lpSubKey, int nVal )
+BOOL CRegOperator::Write(const char* lpSubKey, int nVal)
 {
-	assert( m_hKey );
-	assert( lpSubKey );
+	assert(m_hKey);
+	assert(lpSubKey);
 
 	DWORD dwValue;
-	dwValue=(DWORD)nVal;
+	dwValue = (DWORD)nVal;
 
-	long lReturn = RegSetValueExA( m_hKey, lpSubKey, 0L, REG_DWORD, (const BYTE *) &dwValue, sizeof(DWORD) );
+	long lReturn = RegSetValueExA(m_hKey, lpSubKey, 0L, REG_DWORD, (const BYTE *)&dwValue, sizeof(DWORD));
 
-	if( ERROR_SUCCESS == lReturn )
+	if (ERROR_SUCCESS == lReturn)
 	{
 		/* 成功写入 */
 		return TRUE;
 	}
 	/* 写入失败 */
-	return FALSE;	
+	return FALSE;
 }
 
 BOOL CRegOperator::EnumSub(OUT std::vector<std::string>* subTreeNames/*=NULL*/, OUT std::vector<std::string>* subValueNames/*=NULL*/)
 {
 	char     achKey[MAX_KEY_LENGTH];   // buffer for subkey name  
-	char	 achValue[MAX_VALUE_NAME];   
+	char	 achValue[MAX_VALUE_NAME];
 	DWORD	 cchValue = MAX_VALUE_NAME;
 	DWORD    cbName;                   // size of name string   
 	char     achClass[MAX_PATH] = ("");  // buffer for class name   
 	DWORD    cchClassName = MAX_PATH;  // size of class string   
-	DWORD    cSubKeys=0;               // number of subkeys
+	DWORD    cSubKeys = 0;               // number of subkeys
 	DWORD    cValues;              // number of values for key   
 	DWORD    cbMaxSubKey;              // longest subkey size   
 	DWORD    cchMaxClass;              // longest class string
@@ -473,12 +473,12 @@ BOOL CRegOperator::EnumSub(OUT std::vector<std::string>* subTreeNames/*=NULL*/, 
 	DWORD    cbSecurityDescriptor; // size of security descriptor   
 	FILETIME ftLastWriteTime;      // last write time   
 
-	DWORD i, retCode;   
+	DWORD i, retCode;
 
-	 
+
 
 	// Get the class name and the value count.   
-	retCode = RegQueryInfoKeyA(  
+	retCode = RegQueryInfoKeyA(
 		m_hKey,                    // key handle   
 		achClass,                // buffer for class name   
 		&cchClassName,           // size of class string   
@@ -496,52 +496,52 @@ BOOL CRegOperator::EnumSub(OUT std::vector<std::string>* subTreeNames/*=NULL*/, 
 		return FALSE;
 
 	// Enumerate the subkeys, until RegEnumKeyEx fails.  
-	if (cSubKeys && subTreeNames)  
-	{  
+	if (cSubKeys && subTreeNames)
+	{
 		//printf( "\nNumber of subkeys: %d\n", cSubKeys);  
 
-		for (i=0; i<cSubKeys; i++)   
-		{   
+		for (i = 0; i < cSubKeys; i++)
+		{
 			cbName = MAX_KEY_LENGTH;
 			achKey[0] = '\0';
-			retCode = RegEnumKeyExA(m_hKey, i,  
-				achKey,   
-				&cbName,   
-				NULL,   
-				NULL,   
-				NULL,   
-				&ftLastWriteTime);   
-			if (retCode == ERROR_SUCCESS)   
-			{  
+			retCode = RegEnumKeyExA(m_hKey, i,
+				achKey,
+				&cbName,
+				NULL,
+				NULL,
+				NULL,
+				&ftLastWriteTime);
+			if (retCode == ERROR_SUCCESS)
+			{
 				//_tprintf(TEXT("(%d) %s\n"), i+1, achKey);  
 				subTreeNames->push_back(achKey);
-			}  
-		}  
-	}   
+			}
+		}
+	}
 
 	// Enumerate the key values.   
 	if (cValues && subValueNames)
-	{  
-		printf( "\nNumber of values: %d\n", cValues);
+	{
+		printf("\nNumber of values: %d\n", cValues);
 
-		for (i=0, retCode=ERROR_SUCCESS; i<cValues; i++)
+		for (i = 0, retCode = ERROR_SUCCESS; i < cValues; i++)
 		{
 			cchValue = MAX_VALUE_NAME;
-			achValue[0] = '\0';   
-			retCode = RegEnumValueA(m_hKey, i,   
-				achValue,   
-				&cchValue,   
-				NULL,   
-				NULL,  
-				NULL,  
-				NULL);  
+			achValue[0] = '\0';
+			retCode = RegEnumValueA(m_hKey, i,
+				achValue,
+				&cchValue,
+				NULL,
+				NULL,
+				NULL,
+				NULL);
 
-			if (retCode == ERROR_SUCCESS )   
-			{   
+			if (retCode == ERROR_SUCCESS)
+			{
 				//_tprintf(TEXT("(%d) %s\n"), i+1, achValue);   
 				subValueNames->push_back(achValue);
-			}   
-		}  
+			}
+		}
 	}
 
 	return TRUE;

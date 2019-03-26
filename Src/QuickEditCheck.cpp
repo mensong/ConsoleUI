@@ -46,10 +46,10 @@ public:
 	{
 		timerPaoma.Pause();
 
-		while (drawing) 
+		while (drawing)
 			Sleep(1);
 
-		for (int i = 0; i<m_vctBts.size(); ++i)
+		for (int i = 0; i < m_vctBts.size(); ++i)
 		{
 			Control* pBt = m_vctBts[i];
 
@@ -58,7 +58,7 @@ public:
 				pBt->setTextColor(m_txtColorSel);
 				pBt->setBkColor(m_bkColorSel);
 
-				consoleUI()->setCurPosition(pBt->rect().X, pBt->rect().Y + pBt->rect().nHeight-1);
+				consoleUI()->setCurPosition(pBt->rect().X, pBt->rect().Y + pBt->rect().nHeight - 1);
 			}
 			else
 			{
@@ -114,7 +114,7 @@ protected:
 				else if (m_vctBts[m_nSel]->getID() == "IGNORE")
 				{
 					goto CONTINUE;
-				}				
+				}
 				break;
 			}
 			case 82://R
@@ -181,7 +181,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 		Rect rectPlan;
 		rectPlan.X = 2;
 		rectPlan.Y = 1;
-		rectPlan.nWidth = consoleUI.getConsoleScreenInfo().dwSize.X - rectPlan.X*2+1;
+		rectPlan.nWidth = consoleUI.getConsoleScreenInfo().dwSize.X - rectPlan.X * 2 + 1;
 		rectPlan.nHeight = consoleUI.getConsoleScreenInfo().srWindow.Bottom - rectPlan.Y - 5;
 		consoleUI.setControlRect(&warnPlan, rectPlan, false);
 		consoleUI.addControl(&warnPlan);
@@ -214,7 +214,7 @@ QuickEditCheck::QuickEditCheck(bool requireRestart/* = false*/)
 		consoleUI.setControlRect(&ignore, rectButton, false);
 		consoleUI.addControl(&ignore);
 		consoleUI.addEvent(&ignore);
-		
+
 		int moveX = (consoleUI.getConsoleScreenInfo().dwSize.X - (rectButton.X + rectButton.nWidth)) / 2;
 		Rect rect = restart.getRect();
 		rect.X += moveX;

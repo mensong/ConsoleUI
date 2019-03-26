@@ -17,12 +17,12 @@ public:
 		StopTimer();
 	}
 
-	void StartTimer(int interval, std::function<void()> task) 
+	void StartTimer(int interval, std::function<void()> task)
 	{
 		try_to_expire_ = false;
 
-		std::thread([this, interval, task](){
-			while (!try_to_expire_) 
+		std::thread([this, interval, task]() {
+			while (!try_to_expire_)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(interval));
 				if (!try_to_expire_ && !pause)
@@ -31,7 +31,7 @@ public:
 		}).detach();
 	}
 
-	void StopTimer() 
+	void StopTimer()
 	{
 		try_to_expire_ = true;
 	}

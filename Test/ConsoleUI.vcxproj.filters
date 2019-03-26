@@ -16,19 +16,10 @@
     <Filter Include="ConsoleUI">
       <UniqueIdentifier>{aef86894-0059-4f9a-bfa6-992d2c0e376d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="conv">
-      <UniqueIdentifier>{e2909ee6-c2b0-4304-91c9-b64e9aaea009}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Src\string_utility.cpp">
       <Filter>ConsoleUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\conv\Convertor.cpp">
-      <Filter>conv</Filter>
-    </ClCompile>
-    <ClCompile Include="..\conv\win_iconv.c">
-      <Filter>conv</Filter>
     </ClCompile>
     <ClCompile Include="test.cpp">
       <Filter>源文件</Filter>
@@ -37,6 +28,18 @@
       <Filter>ConsoleUI</Filter>
     </ClCompile>
     <ClCompile Include="..\Src\RegOperator.cpp">
+      <Filter>ConsoleUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\ConsoleComCtrl.cpp">
+      <Filter>ConsoleUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\ConsoleComEvent.cpp">
+      <Filter>ConsoleUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\ConsoleTabSelector.cpp">
+      <Filter>ConsoleUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\ConsoleUI.cpp">
       <Filter>ConsoleUI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -52,12 +55,6 @@
     </ClInclude>
     <ClInclude Include="..\Src\string_utility.h">
       <Filter>ConsoleUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\conv\Convertor.h">
-      <Filter>conv</Filter>
-    </ClInclude>
-    <ClInclude Include="..\conv\iconv.h">
-      <Filter>conv</Filter>
     </ClInclude>
     <ClInclude Include="..\Src\ConsoleUI.h">
       <Filter>ConsoleUI</Filter>

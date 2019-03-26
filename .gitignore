@@ -3,3 +3,9 @@
 /.vs/ConsoleUI/v14/*.suo
 /Test/x64/Debug
 /x64/Debug
+/Debug
+/Release
+/Test/Debug
+/Test/Release
+/Test/x64/Release
+/x64/Release

@@ -255,7 +255,7 @@ public:
 public:
 	ConsoleUI(COLOR bkColor = color_default, COLOR textColor = color_default, STYLE style = style_default);
 
-	~ConsoleUI() {}
+	~ConsoleUI();
 
 	HANDLE getOutConsole() const { return m_hOut; }
 	HANDLE getInConsole() const { return m_hIn; }

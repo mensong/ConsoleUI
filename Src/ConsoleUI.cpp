@@ -160,6 +160,11 @@ ConsoleUI::ConsoleUI(COLOR bkColor /*= color_default*/, COLOR textColor /*= colo
 }
 
 
+GL::ConsoleUI::~ConsoleUI()
+{
+	clearScreen();
+}
+
 COORD GL::ConsoleUI::popPosition()
 {
 	COORD pt; pt.X = -1; pt.Y = -1;

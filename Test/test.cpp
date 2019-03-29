@@ -39,7 +39,7 @@ protected:
 void main(int argc, char** argv)
 {
 	//检测是否开启开速编辑模式，如果开启了，则会导致鼠标点击无效
-	QuickEditCheck qec;	
+	QuickEditCheck qec;
 
 	///////////////////第1个控制台界面////////////////
 	ConsoleUI consoleUI(GL::COLOR::dark_cyan);
@@ -294,8 +294,8 @@ void main(int argc, char** argv)
 	Rect rectAPlaneTip2;
 	rectAPlaneTip2.X = 2;
 	rectAPlaneTip2.Y = 1;
-	rectAPlaneTip2.nWidth = csbi.dwSize.X - rectAPlaneTip2.X*2;
-	rectAPlaneTip2.nHeight = csbi.srWindow.Bottom - csbi.srWindow.Top - rectAPlaneTip2.Y*2;
+	rectAPlaneTip2.nWidth = csbi.dwSize.X - rectAPlaneTip2.X * 2;
+	rectAPlaneTip2.nHeight = csbi.srWindow.Bottom - csbi.srWindow.Top - rectAPlaneTip2.Y * 2;
 	consoleUI2.setControlRect(&aPlaneTip2, rectAPlaneTip2);
 	consoleUI2.addControl(&aPlaneTip2, false);
 
@@ -317,11 +317,31 @@ void main(int argc, char** argv)
 	consoleUI2.addEvent(&btEnd2);
 	consoleUI2.addControl(&btEnd2);
 
+	//关闭按钮
+	bool bExit = false;
+	ConsoleButton btClost(&consoleUI);
+	btClost.setCaption("×");
+	btClost.setSelectable(true);
+	btClost.setBkColor(green);
+	btClost.setTextColor(red);
+	Rect rectClose;
+	rectClose.nWidth = 4;
+	rectClose.nHeight = 1;
+	rectClose.X = consoleUI.getConsoleScreenInfo().dwSize.X - rectClose.nWidth - 1;
+	rectClose.Y = 0;
+	consoleUI.setControlRect(&btClost, rectClose, false);
+	btClost.setClickedEvent([&](void)->void {
+		consoleUI.endLoopEvent();
+		consoleUI.endLoopEvent();
+		bExit = true;
+	});
+	consoleUI.addEvent(&btClost);
+	consoleUI.addControl(&btClost);
 
 
 	///////////////////////Loop event////////////////////
 	bool b = true;
-	for ( ; true; b = !b)
+	for (; !bExit; b = !b)
 	{
 		//用redraw和startLoopEvent启动新界面
 		if (b)

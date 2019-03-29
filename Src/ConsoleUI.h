@@ -352,7 +352,8 @@ public:
 
 	Control* getControlAtPoint(int x, int y) const;
 
-	//如果rectTo中的属性为-1时不改变原值
+	//设置一个控件的位置与范围
+	//  如果rectTo中的属性为-1时不改变原值
 	BOOL setControlRect(Control* pControl, const Rect& rectTo, bool redraw = false, bool bFailOverWidth = true);
 
 	BOOL setControlRect(Control* pControl, int tox = -1, int toy = -1, int toWidth = -1, int toHeight = -1,
@@ -400,7 +401,7 @@ private:
 	bool m_loop;
 
 	std::vector<Control*> m_vctControls;
-	RT::RTreeEx<Control*, float, 2> m_rtRect2Control;
+	RT::RTreeEx<Control*, float, 2> m_rtRect2Control;//为了快速获得某控件而建立RTree
 
 	std::vector<COORD> m_stackPostion;
 };

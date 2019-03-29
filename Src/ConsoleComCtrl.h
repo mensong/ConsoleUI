@@ -335,8 +335,8 @@ protected:
 	void refreshPageButtons(bool redraw = true);
 
 private:
-	ConsoleColor m_broderColor;
-	ConsoleColor m_selectedItemColor;
+	ConsoleBrush m_brushBroder;
+	ConsoleBrush m_brushSelectedItem;
 
 	int m_nIdx;
 	int m_nVisibleStart;
@@ -434,7 +434,7 @@ private:
 	int m_nMax;
 	int m_nStep;
 
-	ConsoleColor m_colorRemain;
+	ConsoleBrush m_brushRemain;
 };
 
 £ýNS_END

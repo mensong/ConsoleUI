@@ -180,11 +180,11 @@ typedef struct tagRect
 } Rect;
 
 
-//Console Color
-class ConsoleColor
+//Console Brush
+class ConsoleBrush
 {
 public:
-	ConsoleColor(COLOR bkColor = color_default, COLOR textColor = color_default, STYLE style = style_default);
+	ConsoleBrush(COLOR bkColor = color_default, COLOR textColor = color_default, STYLE style = style_default);
 
 	COLOR getBkColor() const { return m_bkColor; }
 	COLOR getTextColor() const { return m_textColor; }
@@ -204,7 +204,7 @@ protected:
 //control base
 class Control
 	: virtual public Console
-	, public ConsoleColor
+	, public ConsoleBrush
 {
 public:
 	Control();
@@ -246,7 +246,7 @@ private:
 
 //main class
 class ConsoleUI
-	: public ConsoleColor
+	: public ConsoleBrush
 {
 public:
 	typedef std::vector<Event *> EVENT_LIST;
@@ -438,7 +438,7 @@ public:
 	bool isSelectable() { return m_bCanSelectable; }
 
 protected:
-	ConsoleColor m_colorSelected;
+	ConsoleBrush m_brushSelected;
 	bool m_bCanSelectable;
 };
 

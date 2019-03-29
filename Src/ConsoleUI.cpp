@@ -107,7 +107,7 @@ GL::tagRect::tagRect(const tagRect& rect)
 }
 
 
-ConsoleColor::ConsoleColor(COLOR bkColor /*= color_default*/, COLOR textColor /*= color_default*/, STYLE style /*= style_default*/)
+ConsoleBrush::ConsoleBrush(COLOR bkColor /*= color_default*/, COLOR textColor /*= color_default*/, STYLE style /*= style_default*/)
 	: m_bkColor(bkColor)
 	, m_textColor(textColor)
 	, m_Style(style)
@@ -143,7 +143,7 @@ void GL::Control::getPointColorAndStyle(int x, int y, COLOR& bkClolor, COLOR& te
 
 ConsoleUI::ConsoleUI(COLOR bkColor /*= color_default*/, COLOR textColor /*= color_default*/, STYLE style /*= style_default*/)
 	: m_loop(true)
-	, ConsoleColor(bkColor, textColor, style)
+	, ConsoleBrush(bkColor, textColor, style)
 {
 	m_hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	m_hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -1160,9 +1160,9 @@ void GL::ControlSelectable::getDrawColorAndStyle(COLOR& textColor, COLOR& bkColo
 {
 	if (m_bCanSelectable && consoleUI()->isControlActive(this))
 	{
-		textColor = m_colorSelected.getTextColor();
-		bkColor = m_colorSelected.getBkColor();
-		style = m_colorSelected.getStyle();
+		textColor = m_brushSelected.getTextColor();
+		bkColor = m_brushSelected.getBkColor();
+		style = m_brushSelected.getStyle();
 	}
 	else
 	{
@@ -1175,52 +1175,52 @@ void GL::ControlSelectable::getDrawColorAndStyle(COLOR& textColor, COLOR& bkColo
 GL::STYLE GL::ControlSelectable::getDrawStyle()
 {
 	if (consoleUI()->isControlActive(this))
-		return m_colorSelected.getStyle();
+		return m_brushSelected.getStyle();
 	return getStyle();
 }
 
 GL::COLOR GL::ControlSelectable::getDrawBkColor()
 {
 	if (consoleUI()->isControlActive(this))
-		return m_colorSelected.getBkColor();
+		return m_brushSelected.getBkColor();
 	return getBkColor();
 }
 
 GL::COLOR GL::ControlSelectable::getDrawTextColor()
 {
 	if (consoleUI()->isControlActive(this))
-		return m_colorSelected.getTextColor();
+		return m_brushSelected.getTextColor();
 	return getTextColor();
 }
 
 GL::STYLE GL::ControlSelectable::getSelectedStyle()
 {
-	return m_colorSelected.getStyle();
+	return m_brushSelected.getStyle();
 }
 
 GL::COLOR GL::ControlSelectable::getSelectedBkColor()
 {
-	return m_colorSelected.getBkColor();
+	return m_brushSelected.getBkColor();
 }
 
 GL::COLOR GL::ControlSelectable::getSelectedTextColor()
 {
-	return m_colorSelected.getTextColor();
+	return m_brushSelected.getTextColor();
 }
 
 void GL::ControlSelectable::setSelectedStyle(STYLE style)
 {
-	m_colorSelected.setStyle(style);
+	m_brushSelected.setStyle(style);
 }
 
 void GL::ControlSelectable::setSelectedBkColor(COLOR color)
 {
-	m_colorSelected.setBkColor(color);
+	m_brushSelected.setBkColor(color);
 }
 
 void GL::ControlSelectable::setSelectedTextColor(COLOR color)
 {
-	m_colorSelected.setTextColor(color);
+	m_brushSelected.setTextColor(color);
 }
 
 £ýNS_END

@@ -534,13 +534,13 @@ ConsoleListBox::ConsoleListBox(ConsoleUI *consoleUI /*= NULL*/)
 	setBkColor(white);
 	setTextColor(black);
 
-	m_broderColor.setBkColor(gray);
-	m_broderColor.setTextColor(color_default);
-	m_broderColor.setStyle(style_default);
+	m_brushBroder.setBkColor(gray);
+	m_brushBroder.setTextColor(color_default);
+	m_brushBroder.setStyle(style_default);
 
-	m_selectedItemColor.setBkColor(blue);
-	m_selectedItemColor.setTextColor(color_default);
-	m_selectedItemColor.setStyle((STYLE)(common_lvb_grid_horizontal | common_lvb_underscore));
+	m_brushSelectedItem.setBkColor(blue);
+	m_brushSelectedItem.setTextColor(color_default);
+	m_brushSelectedItem.setStyle((STYLE)(common_lvb_grid_horizontal | common_lvb_underscore));
 }
 
 void GL::ConsoleListBox::refreshPageButtons(bool redraw /*= true*/)
@@ -807,9 +807,9 @@ void GL::ConsoleListBox::getPointColorAndStyle(int x, int y, COLOR& bkClolor, CO
 	rect.nHeight = getContentEndY() - getContentStartY();
 	if (!rect.isIn(x, y))
 	{//border
-		textColor = m_broderColor.getTextColor();
-		bkClolor = m_broderColor.getBkColor();
-		style = m_broderColor.getStyle();
+		textColor = m_brushBroder.getTextColor();
+		bkClolor = m_brushBroder.getBkColor();
+		style = m_brushBroder.getStyle();
 	}
 	else
 	{//in
@@ -822,16 +822,16 @@ void GL::ConsoleListBox::getPointColorAndStyle(int x, int y, COLOR& bkClolor, CO
 void GL::ConsoleListBox::setSelectedColor(COLOR bkColor, COLOR textColor /*= color_default*/, STYLE style /*= style_default*/)
 {
 	if (color_default != bkColor)
-		m_selectedItemColor.setBkColor(bkColor);
+		m_brushSelectedItem.setBkColor(bkColor);
 	if (textColor != color_default)
-		m_selectedItemColor.setTextColor(textColor);
+		m_brushSelectedItem.setTextColor(textColor);
 	if (style != style_default)
-		m_selectedItemColor.setStyle(style);
+		m_brushSelectedItem.setStyle(style);
 }
 
 void GL::ConsoleListBox::setBorderColor(COLOR bkColor)
 {
-	m_broderColor.setBkColor(bkColor);
+	m_brushBroder.setBkColor(bkColor);
 }
 
 bool GL::ConsoleListBox::draw()
@@ -844,7 +844,7 @@ bool GL::ConsoleListBox::draw()
 
 		//draw border rectange
 		consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight,
-			m_broderColor.getTextColor(), m_broderColor.getBkColor(), m_broderColor.getStyle());
+			m_brushBroder.getTextColor(), m_brushBroder.getBkColor(), m_brushBroder.getStyle());
 
 		//draw content rectange
 		consoleUI()->createBox(getContentStartX(), getContentStartY(), getContentEndX(), getContentEndY(),
@@ -870,7 +870,7 @@ bool GL::ConsoleListBox::draw()
 
 			//current select
 			consoleUI()->fillColorAndStyle(getContentStartX(), getContentStartY() + (m_nIdx - m_nVisibleStart), getContentEndX() - getContentStartX(),
-				m_selectedItemColor.getTextColor(), m_selectedItemColor.getBkColor(), m_selectedItemColor.getStyle());
+				m_brushSelectedItem.getTextColor(), m_brushSelectedItem.getBkColor(), m_brushSelectedItem.getStyle());
 		}
 
 		//draw pre page
@@ -990,8 +990,8 @@ ConsoleInputBox::ConsoleInputBox(ConsoleUI *consoleUI /*= NULL*/)
 {
 	setConsoleUI(consoleUI);
 
-	m_colorSelected.setTextColor(black);
-	m_colorSelected.setBkColor(white);
+	m_brushSelected.setTextColor(black);
+	m_brushSelected.setBkColor(white);
 }
 
 void GL::ConsoleInputBox::onEvent(INPUT_RECORD &input_record)
@@ -1347,7 +1347,7 @@ bool GL::ConsoleProgressBar::draw()
 		int nCompletedX = (m_nCompleted * rect().nWidth) / (m_nMax == 0 ? rect().nWidth : m_nMax);
 		consoleUI()->createBox(rect().X, rect().Y, rect().X + nCompletedX, rect().Y + rect().nHeight, textColor, bkColor, style);
 		consoleUI()->createBox(rect().X + nCompletedX, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight,
-			m_colorRemain.getTextColor(), m_colorRemain.getBkColor(), m_colorRemain.getStyle());
+			m_brushRemain.getTextColor(), m_brushRemain.getBkColor(), m_brushRemain.getStyle());
 		//draw border
 		consoleUI()->createBorder(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight);
 

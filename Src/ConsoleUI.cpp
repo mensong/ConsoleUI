@@ -1,6 +1,7 @@
 #include "ConsoleUI.h"
 #include <conio.h>
 #include <string>
+#include <clocale>
 
 NS_START｛
 
@@ -147,7 +148,15 @@ ConsoleUI::ConsoleUI(COLOR bkColor /*= color_default*/, COLOR textColor /*= colo
 {
 	m_hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	m_hIn = GetStdHandle(STD_INPUT_HANDLE);
-	SetConsoleMode(m_hIn, 0);
+
+	//关闭“快速编辑模式”以支持鼠标事件
+	DWORD consoleMode = 0;
+	if (GetConsoleMode(m_hIn, &consoleMode))
+	{
+		// 清除快速编辑模式标志
+		consoleMode &= ~ENABLE_QUICK_EDIT_MODE;
+		SetConsoleMode(m_hIn, consoleMode);
+	}
 
 	if (m_textColor == color_default)
 		m_textColor = white;
@@ -308,11 +317,11 @@ BOOL GL::ConsoleUI::redrawRelateRectControls(Control* pControlBase)
 {
 	Rect rect = pControlBase->getRect();
 	float aMin[2];
-	aMin[0] = rect.X;
-	aMin[1] = rect.Y;
+	aMin[0] = (float)rect.X;
+	aMin[1] = (float)rect.Y;
 	float aMax[2];
-	aMax[0] = rect.X + rect.nWidth - 1;
-	aMax[1] = rect.Y + rect.nHeight - 1;
+	aMax[0] = (float)(rect.X + rect.nWidth - 1);
+	aMax[1] = (float)(rect.Y + rect.nHeight - 1);
 	std::set<Control*> setControls;
 	m_rtRect2Control.Search(aMin, aMax, &setControls);
 	setControls.erase(pControlBase);
@@ -321,14 +330,14 @@ BOOL GL::ConsoleUI::redrawRelateRectControls(Control* pControlBase)
 
 	BOOL bRet = FALSE;
 	std::vector<Control*> vctWillDraw;
-	for (int i = m_vctControls.size() - 1; i >= 0; --i)
+	for (int i = (int)m_vctControls.size() - 1; i >= 0; --i)
 	{
 		Control* pCtrl = m_vctControls[i];
 		if (setControls.find(pCtrl) == setControls.end())
 			continue;
 		vctWillDraw.push_back(m_vctControls[i]);
 	}
-	for (int i = vctWillDraw.size() - 1; i >= 0; --i)
+	for (int i = (int)vctWillDraw.size() - 1; i >= 0; --i)
 	{
 		vctWillDraw[i]->draw();
 		bRet = TRUE;
@@ -341,11 +350,11 @@ BOOL GL::ConsoleUI::redrawBottomControls(Control* pControlBase)
 {
 	Rect rect = pControlBase->getRect();
 	float aMin[2];
-	aMin[0] = rect.X;
-	aMin[1] = rect.Y;
+	aMin[0] = (float)rect.X;
+	aMin[1] = (float)rect.Y;
 	float aMax[2];
-	aMax[0] = rect.X + rect.nWidth - 1;
-	aMax[1] = rect.Y + rect.nHeight - 1;
+	aMax[0] = (float)(rect.X + rect.nWidth - 1);
+	aMax[1] = (float)(rect.Y + rect.nHeight - 1);
 	std::set<Control*> setControls;
 	m_rtRect2Control.Search(aMin, aMax, &setControls);
 	setControls.erase(pControlBase);
@@ -372,11 +381,11 @@ BOOL GL::ConsoleUI::redrawTopControls(Control* pControlBase)
 {
 	Rect rect = pControlBase->getRect();
 	float aMin[2];
-	aMin[0] = rect.X;
-	aMin[1] = rect.Y;
+	aMin[0] = (float)rect.X;
+	aMin[1] = (float)rect.Y;
 	float aMax[2];
-	aMax[0] = rect.X + rect.nWidth - 1;
-	aMax[1] = rect.Y + rect.nHeight - 1;
+	aMax[0] = (float)(rect.X + rect.nWidth - 1);
+	aMax[1] = (float)(rect.Y + rect.nHeight - 1);
 	std::set<Control*> setControls;
 	m_rtRect2Control.Search(aMin, aMax, &setControls);
 	setControls.erase(pControlBase);
@@ -385,7 +394,7 @@ BOOL GL::ConsoleUI::redrawTopControls(Control* pControlBase)
 
 	BOOL bRet = FALSE;
 	std::vector<Control*> vctWillDraw;
-	for (int i = m_vctControls.size() - 1; i >= 0; --i)
+	for (int i = (int)m_vctControls.size() - 1; i >= 0; --i)
 	{
 		Control* pCtrl = m_vctControls[i];
 		if (pCtrl == pControlBase)
@@ -394,7 +403,7 @@ BOOL GL::ConsoleUI::redrawTopControls(Control* pControlBase)
 			continue;
 		vctWillDraw.push_back(m_vctControls[i]);
 	}
-	for (int i = vctWillDraw.size() - 1; i >= 0; --i)
+	for (int i = (int)vctWillDraw.size() - 1; i >= 0; --i)
 	{
 		vctWillDraw[i]->draw();
 		bRet = TRUE;
@@ -536,9 +545,12 @@ Control* GL::ConsoleUI::getControlByLayerId(int nLayerId)
 
 int GL::ConsoleUI::getControlLayerId(Control* pCtrl)
 {
-	int nLayer = std::find(m_vctControls.begin(), m_vctControls.end(), pCtrl) - m_vctControls.begin();
+	std::vector<Control*>::iterator itFinder = std::find(m_vctControls.begin(), m_vctControls.end(), pCtrl);
+	if (itFinder == m_vctControls.end())
+		return -1;
+	size_t nLayer = itFinder - m_vctControls.begin();
 	if (nLayer < m_vctControls.size())
-		return nLayer;
+		return (int)nLayer;
 	return -1;
 }
 
@@ -550,12 +562,12 @@ Control* GL::ConsoleUI::getActiveControl() const
 
 Control* GL::ConsoleUI::getTopControl(int x, int y, Control* pExclude /*= NULL*/) const
 {
-	float point[2] = { x, y };
+	float point[2] = { (float)x, (float)y };
 	std::set<Control*> setControls;
 	m_rtRect2Control.Search(point, point, &setControls);
 
 	//找到顶层开始查找
-	for (int i = m_vctControls.size() - 1; i >= 0; --i)
+	for (int i = (int)m_vctControls.size() - 1; i >= 0; --i)
 	{
 		if (setControls.find(m_vctControls[i]) != setControls.end())
 		{
@@ -583,8 +595,8 @@ BOOL GL::ConsoleUI::removeControl(Control* pControl)
 	}
 
 	Rect rect = pControl->getRect();
-	float aMin[2] = { rect.X, rect.Y };
-	float aMax[2] = { rect.X + rect.nWidth/*-1*/, rect.Y + rect.nHeight/*-1*/ };
+	float aMin[2] = { (float)rect.X, (float)rect.Y };
+	float aMax[2] = { (float)(rect.X + rect.nWidth/*-1*/), (float)(rect.Y + rect.nHeight/*-1*/) };
 	bRet2 = m_rtRect2Control.Remove(aMin, aMax, pControl) ? TRUE : FALSE;
 
 	return bRet1 && bRet2;
@@ -619,16 +631,16 @@ bool GL::ConsoleUI::updateControlRect(Control* pControl)
 bool GL::ConsoleUI::removeControlRect(Control* pControl)
 {
 	Rect rect = pControl->getRect();
-	float aMin[2] = { rect.X, rect.Y };
-	float aMax[2] = { rect.X + rect.nWidth, rect.Y + rect.nHeight };
+	float aMin[2] = { (float)rect.X, (float)rect.Y };
+	float aMax[2] = { (float)(rect.X + rect.nWidth), (float)(rect.Y + rect.nHeight) };
 	return m_rtRect2Control.Remove(aMin, aMax, pControl);
 }
 
 bool GL::ConsoleUI::addControlRect(Control* pControl)
 {
 	Rect rect = pControl->getRect();
-	float aMin[2] = { rect.X, rect.Y };
-	float aMax[2] = { rect.X + rect.nWidth - 1, rect.Y + rect.nHeight - 1 };
+	float aMin[2] = { (float)rect.X, (float)rect.Y };
+	float aMax[2] = { (float)(rect.X + rect.nWidth - 1), (float)(rect.Y + rect.nHeight - 1) };
 	return m_rtRect2Control.Insert(aMin, aMax, pControl);
 }
 
@@ -833,7 +845,7 @@ bool GL::ConsoleUI::createBox(unsigned short x1, unsigned short y1, unsigned sho
 	if (x1 >= x2 || y1 >= y2)
 		return false;
 
-	int x, y;
+	int /*x,*/ y;
 	setCurColor(textCol, bkcol);                       //Set to color bkcol
 	setCurStyle(style);
 

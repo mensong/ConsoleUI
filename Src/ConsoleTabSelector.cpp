@@ -15,7 +15,7 @@ GL::ConsoleTabSelector::ConsoleTabSelector(ConsoleUI *consoleUI /*= NULL*/)
 std::vector<ControlSelectable*> GL::ConsoleTabSelector::getSelectableControls()
 {
 	std::vector<ControlSelectable*> vctRet;
-	int nCtrlCount = consoleUI()->getControls().size();
+	int nCtrlCount = (int)(consoleUI()->getControls().size());
 	for (int i = 0; i < nCtrlCount; ++i)
 	{
 		ControlSelectable* pCtrl = dynamic_cast<ControlSelectable*>(consoleUI()->getControls()[i]);
@@ -178,7 +178,7 @@ int GL::ConsoleTabSelector::getSelectedId(Control* pControl)
 	if (itFinder == vctControls.end())
 		return m_nSelectedLayerId;
 
-	return itFinder - vctControls.begin();
+	return (int)(itFinder - vctControls.begin());
 }
 
 £ýNS_END

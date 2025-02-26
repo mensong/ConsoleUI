@@ -2,6 +2,7 @@
 #ifndef  CONSOLEAPP_H 
 #define CONSOLEAPP_H 
 #include <windows.h>
+#include <string>
 #include <vector>
 #include <map>
 #include "RTreeEx.h"

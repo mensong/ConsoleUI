@@ -12,7 +12,7 @@ namespace GL
 	//取得字符串字符个数,不限中英文
 	size_t ZH_getStringLength(const std::string &s)
 	{
-		short ch;
+		char ch;
 		size_t cnt = s.size();
 		for (size_t i = 0; i < s.size(); ++i)
 		{
@@ -29,9 +29,9 @@ namespace GL
 	//取得以0为起始索引的指定位置字符
 	std::string ZH_getStringAt(const std::string &s, size_t index)
 	{
-		short ch;
+		char ch;
 		std::string res;
-		unsigned cnt = index;
+		size_t cnt = index;
 		size_t i = 0;
 		for (; i < s.size() && i < cnt; ++i)
 		{
@@ -57,7 +57,7 @@ namespace GL
 			return "";
 
 		if (0 > count)
-			count = s.size();
+			count = (int)s.size();
 
 		char ch;
 		size_t i = 0;
@@ -72,7 +72,7 @@ namespace GL
 		}
 
 		std::string sRet;
-		for (int j = i; j < s.size() && count > 0; ++j)
+		for (size_t j = i; j < s.size() && count > 0; ++j)
 		{
 			ch = s.at(j);
 			sRet += ch;
@@ -143,14 +143,14 @@ namespace GL
 		if (nFind < start)
 			return -1;
 
-		return nFind;
+		return (int)nFind;
 	}
 
 	size_t ZH_ZhIdxToOrigIdx(const std::string & s, size_t ZhIdx)
 	{
 		if (ZH_getStringLength(s) <= ZhIdx)
 			return std::string::npos;
-		return ZH_subString(s, 0, ZhIdx).length();
+		return ZH_subString(s, 0, (int)ZhIdx).length();
 	}
 
 	size_t ZH_origIdxToZhIdx(const std::string & s, size_t OrigIdx)
@@ -171,7 +171,7 @@ namespace GL
 		if (s.length() > maxWidth)
 		{//内容多于可显示的area，则截取内容以便显示
 			size_t startZh = ZH_origIdxToZhIdx(s, maxWidth);
-			sValidText = ZH_subString(s, 0, startZh);
+			sValidText = ZH_subString(s, 0, (int)startZh);
 			if (sValidText.length() > maxWidth && GL::ZH_isZHChar(sValidText[sValidText.length() - 1]))
 				sValidText[sValidText.length() - 2] = '\0';//防止汉字的半块飞出
 		}

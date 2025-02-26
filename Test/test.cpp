@@ -1,6 +1,5 @@
 #include "ConsoleComEvent.h"
 #include "ConsoleComCtrl.h"
-#include "QuickEditCheck.h"
 #include "ConsoleTabSelector.h"
 
 using namespace GL;
@@ -38,9 +37,6 @@ protected:
 
 void main(int argc, char** argv)
 {
-	//检测是否开启开速编辑模式，如果开启了，则会导致鼠标点击无效
-	QuickEditCheck qec;
-
 	///////////////////第1个控制台界面////////////////
 	ConsoleUI consoleUI(GL::COLOR::dark_cyan);
 	consoleUI.setTitle("Console UI 演示");
@@ -98,7 +94,7 @@ void main(int argc, char** argv)
 	char txt[256];
 	for (int i = 0; i < 100; ++i)
 	{
-		sprintf(txt, "你好%d", i);
+		sprintf_s(txt, "你好%d", i);
 		listBox.insertItem(txt, -1, false);
 	}
 	listBox.draw();

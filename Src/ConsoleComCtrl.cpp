@@ -100,7 +100,7 @@ void GL::ConsoleButton::draw(COLOR textColor, COLOR bkColor, STYLE style)
 	std::string sDrawText = CutTooLongString(m_sCaption, rect().nWidth);
 
 	int leftOffset = 0;
-	leftOffset = (rect().nWidth - sDrawText.length()) / 2;
+	leftOffset = (rect().nWidth - (int)sDrawText.length()) / 2;
 	int topOffset = 0;
 	topOffset = rect().nHeight / 2;
 
@@ -167,17 +167,17 @@ void GL::ConsoleLabel::onEvent(INPUT_RECORD &input_record)
 		}
 
 	}
-	else if (KEY_EVENT == input_record.EventType)
-	{
-		COORD pt = consoleUI()->getCurPosition();
+	//else if (KEY_EVENT == input_record.EventType)
+	//{
+	//	COORD pt = consoleUI()->getCurPosition();
 
-		if (input_record.Event.KeyEvent.bKeyDown)
-		{
-			switch (input_record.Event.KeyEvent.wVirtualKeyCode)
-			{
-			}
-		}
-	}
+	//	if (input_record.Event.KeyEvent.bKeyDown)
+	//	{
+	//		switch (input_record.Event.KeyEvent.wVirtualKeyCode)
+	//		{
+	//		}
+	//	}
+	//}
 }
 
 int GL::ConsoleLabel::getWidth() const
@@ -210,7 +210,7 @@ bool GL::ConsoleLabel::draw()
 		getDrawColorAndStyle(textColor, bkColor, style);
 
 		if (m_bAutoWidth && rect().nWidth != m_content.length())
-			consoleUI()->setControlRect(this, -1, -1, m_content.length(), -1, false);
+			consoleUI()->setControlRect(this, -1, -1, (int)m_content.length(), -1, false);
 
 		if (textColor == color_default)
 		{
@@ -226,9 +226,9 @@ bool GL::ConsoleLabel::draw()
 		if (m_align == left)
 			leftOffset = 0;
 		else if (m_align == center)
-			leftOffset = (rect().nWidth - sDrawText.length()) / 2;
+			leftOffset = (rect().nWidth - (int)sDrawText.length()) / 2;
 		else if (m_align == right)
-			leftOffset = rect().nWidth - sDrawText.length();
+			leftOffset = rect().nWidth - (int)sDrawText.length();
 
 		//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
 		char *pSpace = new char[rect().nWidth + 1];
@@ -281,11 +281,11 @@ void GL::ConsoleCheckBox::onEvent(INPUT_RECORD &input_record)
 			return;
 		}
 
-		WORD k = (input_record.Event.KeyEvent.wVirtualKeyCode);
-		switch (k)
-		{
+		//WORD k = (input_record.Event.KeyEvent.wVirtualKeyCode);
+		//switch (k)
+		//{
 
-		}
+		//}
 	}
 	else if (MOUSE_EVENT == input_record.EventType)
 	{
@@ -326,12 +326,12 @@ bool GL::ConsoleCheckBox::draw()
 		getDrawColorAndStyle(textColor, bkColor, style);
 
 		if (m_bAutoWidth && rect().nWidth != m_sContent.length() + 2)
-			consoleUI()->setControlRect(this, -1, -1, m_sContent.length() + 2, -1, false);
+			consoleUI()->setControlRect(this, -1, -1, (int)m_sContent.length() + 2, -1, false);
 
 		//draw box 
 		consoleUI()->createBox(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight, textColor, bkColor, style);
 		if (m_bChecked)
-			consoleUI()->drawText(rect().X, rect().Y, "√");
+			consoleUI()->drawText(rect().X, rect().Y, "●");
 		else
 			consoleUI()->drawText(rect().X, rect().Y, "  ");
 		consoleUI()->createBorder(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight);
@@ -469,7 +469,7 @@ bool GL::ConsoleRadioBox::draw()
 		getDrawColorAndStyle(textColor, bkColor, style);
 
 		if (m_bAutoWidth && rect().nWidth != m_sContent.length() + 2)
-			consoleUI()->setControlRect(this, -1, -1, m_sContent.length() + 2, -1, false);
+			consoleUI()->setControlRect(this, -1, -1, (int)m_sContent.length() + 2, -1, false);
 
 		//draw box 
 		consoleUI()->createBox(rect().X, rect().Y, rect().X + 2, rect().Y + rect().nHeight, textColor, bkColor, style);
@@ -582,7 +582,7 @@ void GL::ConsoleListBox::onClickNextItem()
 	if (m_nIdx < m_vctContents.size() - 1)
 		++m_nIdx;
 	else
-		m_nIdx = m_vctContents.size() - 1;
+		m_nIdx = (int)m_vctContents.size() - 1;
 
 	if (m_nIdx > m_nVisibleStart + getContentLines())
 	{
@@ -634,8 +634,8 @@ void GL::ConsoleListBox::onClickNextPage()
 	}
 
 	m_nVisibleStart = m_nVisibleStart + getContentLines();
-	if (m_nVisibleStart > m_vctContents.size() - getContentLines())
-		m_nVisibleStart = m_vctContents.size() - getContentLines();
+	if (m_nVisibleStart > (int)m_vctContents.size() - getContentLines())
+		m_nVisibleStart = (int)m_vctContents.size() - getContentLines();
 	m_nIdx = m_nVisibleStart;
 
 	refreshPageButtons(false);
@@ -722,7 +722,7 @@ void GL::ConsoleListBox::onEvent(INPUT_RECORD &input_record)
 
 int GL::ConsoleListBox::getItemsCount() const
 {
-	return m_vctContents.size();
+	return (int)m_vctContents.size();
 }
 
 std::string GL::ConsoleListBox::getSelectedItemText() const
@@ -780,12 +780,12 @@ int GL::ConsoleListBox::insertItem(const char* txt, int nRow /*= -1*/, bool redr
 	sTxt[sTxt.size() - 1] = '\0';
 
 	if (nRow < 0)
-		nRow = m_vctContents.size();
+		nRow = (int)m_vctContents.size();
 
-	if (nRow >= m_vctContents.size())
+	if (nRow >= (int)m_vctContents.size())
 	{
 		m_vctContents.push_back(sTxt);
-		nRet = m_vctContents.size() - 1;
+		nRet = (int)m_vctContents.size() - 1;
 	}
 	else
 	{
@@ -857,7 +857,7 @@ bool GL::ConsoleListBox::draw()
 			if (m_nIdx < 0)
 				m_nIdx = 0;
 			else if (m_nIdx >= m_vctContents.size())
-				m_nIdx = m_vctContents.size() - 1;
+				m_nIdx = (int)m_vctContents.size() - 1;
 
 			for (int i = 0; i < getContentLines() && (m_nVisibleStart + i) < m_vctContents.size(); ++i)
 			{
@@ -1021,7 +1021,7 @@ void GL::ConsoleInputBox::onEvent(INPUT_RECORD &input_record)
 			{
 			case 8://回退
 			{
-				int nCount = ZH_getStringLength(m_content);
+				int nCount = (int)ZH_getStringLength(m_content);
 				m_content = ZH_subString(m_content, 0, nCount - 1);
 				draw();
 
@@ -1104,7 +1104,7 @@ void GL::ConsoleInputBox::onEvent(INPUT_RECORD &input_record)
 						//m_content += '\0';
 
 						char c[2];
-						sprintf(c, "%c", input_record.Event.KeyEvent.uChar.AsciiChar);
+						sprintf_s(c, "%c", input_record.Event.KeyEvent.uChar.AsciiChar);
 						//parent()->drawText(pt.X, pt.Y, c);
 						draw();
 
@@ -1193,7 +1193,7 @@ bool GL::ConsoleInputBox::setFocus()
 	//	return true;
 	//}
 
-	int nSelX = m_content.length();
+	int nSelX = (int)m_content.length();
 	if (nSelX > getContentALineWidth() - 1)
 		nSelX = getContentALineWidth() - 1;
 	consoleUI()->setCurPosition(rect().X + nSelX, rect().Y);
@@ -1228,7 +1228,7 @@ bool GL::ConsoleInputBox::draw()
 		//parent()->fillColorAndStyle(rect().X, rect().Y, rect().nWidth, m_textColor, m_bkColor, (STYLE)(common_lvb_underscore));
 
 		//draw content
-		int nLinesNeed = m_content.size() / getContentALineWidth();
+		int nLinesNeed = (int)m_content.size() / getContentALineWidth();
 		if (m_content.size() % getContentALineWidth() != 0)
 			++nLinesNeed;//剩余的字符串还需要额外一行
 		std::string sDrawText;
@@ -1253,7 +1253,7 @@ bool GL::ConsoleInputBox::draw()
 			else
 			{
 				size_t zhIdx = ZH_origIdxToZhIdx(sDrawText, getContentALineWidth());
-				consoleUI()->drawText(rect().X, nLineY, ZH_subString(sDrawText, 0, zhIdx).c_str());
+				consoleUI()->drawText(rect().X, nLineY, ZH_subString(sDrawText, 0, (int)zhIdx).c_str());
 
 				sDrawText = ZH_subString(sDrawText, zhIdx);
 			}

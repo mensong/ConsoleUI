@@ -66,6 +66,8 @@ public:
 
 	void setResizeEvent(FN_ON_RESIZE ev) { m_fnOnResize = ev; }
 
+	void setAutoWidth(bool b) { m_bAutoWidth = b; }
+
 public:
 	virtual void onInitControl() {}
 
@@ -96,6 +98,8 @@ private:
 	COLOR m_bkClickColor;
 	COLOR m_textClickColor;
 	STYLE m_ClickStyle;
+
+	bool m_bAutoWidth;
 };
 
 

@@ -34,6 +34,7 @@ bool ConsolePlane::draw()
 }
 
 ConsoleButton::ConsoleButton(ConsoleUI *consoleUI /*= NULL*/)
+	: m_bAutoWidth(false)
 {
 	setConsoleUI(consoleUI);
 
@@ -94,6 +95,13 @@ void GL::ConsoleButton::onEvent(INPUT_RECORD &input_record)
 
 void GL::ConsoleButton::draw(COLOR textColor, COLOR bkColor, STYLE style)
 {
+	consoleUI()->sweepControlAll(this);
+
+	if (m_bAutoWidth && rect().nWidth != m_sCaption.length())
+	{
+		consoleUI()->setControlRect(this, -1, -1, (int)m_sCaption.length(), -1, false);
+	}
+
 	//draw box
 	consoleUI()->createBox(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight, textColor, bkColor, style);
 
@@ -104,12 +112,12 @@ void GL::ConsoleButton::draw(COLOR textColor, COLOR bkColor, STYLE style)
 	int topOffset = 0;
 	topOffset = rect().nHeight / 2;
 
-	//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
-	char *pSpace = new char[rect().nWidth + 1];
-	memset(pSpace, ' ', rect().nWidth);
-	pSpace[rect().nWidth] = '\0';
-	consoleUI()->drawText(rect().X, rect().Y, pSpace);
-	delete[] pSpace;
+	////必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
+	//char *pSpace = new char[rect().nWidth + 1];
+	//memset(pSpace, ' ', rect().nWidth);
+	//pSpace[rect().nWidth] = '\0';
+	//consoleUI()->drawText(rect().X, rect().Y, pSpace);
+	//delete[] pSpace;
 
 	//绘制内容
 	consoleUI()->drawText(rect().X + leftOffset, rect().Y + topOffset, sDrawText.c_str());
@@ -204,13 +212,15 @@ bool GL::ConsoleLabel::draw()
 		if (!Control::draw())
 			break;
 
+		consoleUI()->sweepControlAll(this);
+
+		if (m_bAutoWidth && rect().nWidth != m_content.length())
+			consoleUI()->setControlRect(this, -1, -1, (int)m_content.length(), -1, false);
+
 		COLOR textColor = color_default;
 		COLOR bkColor = color_default;
 		STYLE style = style_default;
 		getDrawColorAndStyle(textColor, bkColor, style);
-
-		if (m_bAutoWidth && rect().nWidth != m_content.length())
-			consoleUI()->setControlRect(this, -1, -1, (int)m_content.length(), -1, false);
 
 		if (textColor == color_default)
 		{
@@ -230,20 +240,20 @@ bool GL::ConsoleLabel::draw()
 		else if (m_align == right)
 			leftOffset = rect().nWidth - (int)sDrawText.length();
 
-		//必须清除旧的内容,否则在当前绘制的内容比旧的内容短时，会残留旧的内容
-		char *pSpace = new char[rect().nWidth + 1];
-		memset(pSpace, ' ', rect().nWidth);
-		pSpace[rect().nWidth] = '\0';
-		consoleUI()->drawText(rect().X, rect().Y, pSpace);
-		delete[] pSpace;
-
 		//绘制内容
 		consoleUI()->drawText(rect().X + leftOffset, rect().Y, sDrawText.c_str());
 
 		if (m_bTransparent)
-			consoleUI()->sweepRectColorAndStyle(rect().X, rect().Y, rect().X + rect().nWidth, rect().Y + rect().nHeight, this, textColor);
+		{
+			consoleUI()->sweepRectColorAndStyle(
+				rect().X, rect().Y,
+				rect().X + rect().nWidth, rect().Y + rect().nHeight,
+				this, textColor);
+		}
 		else
+		{
 			consoleUI()->fillColorAndStyle(rect().X, rect().Y, rect().nWidth, textColor, bkColor, style);
+		}
 
 		bRet = true;
 	} while (0);

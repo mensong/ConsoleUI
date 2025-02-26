@@ -473,6 +473,35 @@ void GL::ConsoleUI::sweepControlColorAndStyle(Control* pControl)
 	sweepRectColorAndStyle(rect.X, rect.Y, rect.X + rect.nWidth, rect.Y + rect.nHeight, pControl);
 }
 
+void ConsoleUI::sweepRectText(int x1, int y1, int x2, int y2)
+{
+	for (int x = x1; x < x2; ++x)
+	{
+		for (int y = y1; y < y2; ++y)
+		{
+			this->drawText(x, y, " ");
+		}
+	}
+}
+
+void ConsoleUI::sweepControlText(Control* pControl)
+{
+	Rect rect = pControl->getRect();
+	sweepRectText(rect.X, rect.Y, rect.X + rect.nWidth, rect.Y + rect.nHeight);
+}
+
+void ConsoleUI::sweepRectAll(int x1, int y1, int x2, int y2, Control* pExclude, COLOR textColor, COLOR bkColor, STYLE style)
+{
+	sweepRectText(x1, y1, x2, y2);
+	sweepRectColorAndStyle(x1, y1, x2, y2, pExclude, textColor, bkColor, style);
+}
+
+void ConsoleUI::sweepControlAll(Control* pControl)
+{
+	sweepControlText(pControl);
+	sweepControlColorAndStyle(pControl);
+}
+
 BOOL GL::ConsoleUI::setControlRect(Control* pControl, int tox /*= -1*/, int toy /*= -1*/, int toWidth /*= -1*/, int toHeight /*= -1*/,
 	bool redraw /*= false*/, bool bFailOverWidth /*= true*/)
 {

@@ -158,6 +158,7 @@ public:
 	//#define FOCUS_EVENT 0x0010 // event contains focus change
 	static std::vector<Event::EVENT_TYPE> getAllEventType();
 
+	//非GlobalEvent只有控件为当前控件时触发
 	void setGlobalEvent(bool b);
 	bool isGlobalEvent() const;
 
@@ -360,8 +361,6 @@ public:
 	BOOL setControlRect(Control* pControl, int tox = -1, int toy = -1, int toWidth = -1, int toHeight = -1,
 		bool redraw = false, bool bFailOverWidth = true);
 
-	void sweepControlColorAndStyle(Control* pControl);
-
 	//清除区域
 	/* 获得给定的区域x1,y1,x2,y2下的每一点的颜色，并根据这些颜色进行刷新到每一个点
 	 * pExclude - 排除的控件，一般为x1,y1,x2,y2这个区域所在的控件
@@ -369,6 +368,14 @@ public:
 	 */
 	void sweepRectColorAndStyle(int x1, int y1, int x2, int y2, Control* pExclude = NULL,
 		COLOR textColor = color_default, COLOR bkColor = color_default, STYLE style = style_default);
+	void sweepControlColorAndStyle(Control* pControl);
+
+	void sweepRectText(int x1, int y1, int x2, int y2);
+	void sweepControlText(Control* pControl);
+
+	void sweepRectAll(int x1, int y1, int x2, int y2, Control* pExclude = NULL,
+		COLOR textColor = color_default, COLOR bkColor = color_default, STYLE style = style_default);
+	void sweepControlAll(Control* pControl);
 
 	//重绘控件，只是重绘，不会更新位置信息
 	BOOL redrawControl(Control* pControl, bool redrawTop = true, bool redrawBottom = true);
@@ -435,6 +442,7 @@ public:
 
 	virtual void getDrawColorAndStyle(COLOR& textColor, COLOR& bkColor, STYLE& style);
 
+	//只有isSelectable的控件，才有可能被选中，因此才有可能ALT有效选中
 	void setSelectable(bool b) { m_bCanSelectable = b; }
 	bool isSelectable() { return m_bCanSelectable; }
 

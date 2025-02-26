@@ -231,6 +231,17 @@ void main(int argc, char** argv)
 	consoleUI.setControlRect(&prog, rectProg);
 	consoleUI.addControl(&prog);
 
+	ConsoleButton btChangeProg(&consoleUI);
+	btChangeProg.setCaption("递增递增递增");
+	btChangeProg.setSelectable(true);
+	btChangeProg.setAutoWidth(true);
+	Rect rectChangeProg;
+	rectChangeProg.nWidth = 5;
+	rectChangeProg.nHeight = 1;
+	rectChangeProg.X = 76;
+	rectChangeProg.Y = 20;
+	consoleUI.setControlRect(&btChangeProg, rectChangeProg, false);
+
 	std::function<void(void)> onChangeProgClick = [&](void) -> void {
 		static bool bP = true;
 		if (bP)
@@ -239,6 +250,9 @@ void main(int argc, char** argv)
 			{
 				prog--;
 				bP = false;
+
+				btChangeProg.setCaption("递减");
+				btChangeProg.draw();
 			}
 		}
 		else
@@ -247,18 +261,12 @@ void main(int argc, char** argv)
 			{
 				prog++;
 				bP = true;
+
+				btChangeProg.setCaption("递增递增递增");
+				btChangeProg.draw();
 			}
 		}
 	};
-	ConsoleButton btChangeProg(&consoleUI);
-	btChangeProg.setCaption("+/-");
-	btChangeProg.setSelectable(true);
-	Rect rectChangeProg;
-	rectChangeProg.nWidth = 5;
-	rectChangeProg.nHeight = 1;
-	rectChangeProg.X = 76;
-	rectChangeProg.Y = 20;
-	consoleUI.setControlRect(&btChangeProg, rectChangeProg, false);
 	btChangeProg.setClickedEvent(onChangeProgClick);
 	consoleUI.addEvent(&btChangeProg);
 	consoleUI.addControl(&btChangeProg);
